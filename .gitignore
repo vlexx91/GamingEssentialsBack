@@ -25,3 +25,5 @@
 ###< symfony/asset-mapper ###
 /.env.dev
 /.env.test
+/.idea/.gitignore
+/.idea/vcs.xml
