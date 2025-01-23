@@ -27,3 +27,7 @@
 /.env.test
 /.idea/.gitignore
 /.idea/vcs.xml
+/.idea/GamingEssentialsBack.iml
+/.idea/modules.xml
+/.idea/php.xml
+/.idea/dataSources.xml
