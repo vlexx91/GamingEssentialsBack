@@ -21,11 +21,11 @@ class LineaPedido
     #[ORM\Column]
     private ?float $precio = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(targetEntity: Producto::class, inversedBy: 'lineaPedidos',cascade: ['remove'])]
     #[ORM\JoinColumn(name:'id_producto',nullable: false)]
     private ?Producto $producto = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(targetEntity: Pedido::class, inversedBy: 'lineaPedidos',cascade: ['remove'])]
     #[ORM\JoinColumn(name:'id_pedido',nullable: false)]
     private ?Pedido $Pedido = null;
 
