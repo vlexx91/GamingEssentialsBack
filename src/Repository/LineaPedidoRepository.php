@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\LineaPedido;
+use App\Entity\Producto;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -44,6 +45,16 @@ class LineaPedidoRepository extends ServiceEntityRepository
     public function findAll(): array
     {
         return $this->createQueryBuilder('l')
+            ->getQuery()
+            ->getResult();
+    }
+
+    // Método para obtener las líneas de pedido por producto
+    public function findByProducto(Producto $producto)
+    {
+        return $this->createQueryBuilder('l')
+            ->andWhere('l.producto = :producto')
+            ->setParameter('producto', $producto)
             ->getQuery()
             ->getResult();
     }
