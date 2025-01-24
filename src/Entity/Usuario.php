@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use phpDocumentor\Reflection\Types\Integer;
+use Symfony\Component\Serializer\Attribute\Ignore;
 
 #[ORM\Table(name: 'Usuario', schema: 'gaming_essentials')]
 #[ORM\Entity(repositoryClass: UsuarioRepository::class)]
@@ -29,6 +30,37 @@ class Usuario
 
     #[ORM\Column(type: 'integer', enumType: Rol::class)]
     private ?Rol $rol = null;
+
+
+
+    //ONE TO MANY de perfiles
+    #[Ignore]
+    #[ORM\OneToOne(targetEntity: Perfil::class, mappedBy: 'usuario', cascade: ['persist', 'remove'])]
+    private ?Perfil $perfil;
+
+//    public function __construct()
+//    {
+//        $this->perfil = new Perfil();
+//    }
+//    #[Ignore]
+//    public function getPerfil(): Perfil
+//    {
+//        return $this->perfil;
+//    }
+//    public function setPerfil(?Perfil $perfil): self
+//    {
+//        $this->perfil = $perfil;
+//
+//        // Establecemos la relación en la entidad relacionada (Perfil)
+//        if ($perfil !== null) {
+//            $perfil->setUsuario($this);
+//        }
+//
+//        return $this;
+//    }
+
+
+
 //
 //    /**
 //     * @var Collection<int, Valoraciones>

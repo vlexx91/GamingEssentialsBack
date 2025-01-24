@@ -3,12 +3,15 @@
 namespace App\Entity;
 
 use App\Repository\PerfilRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use phpDocumentor\Reflection\Types\Integer;
+use Symfony\Component\Serializer\Attribute\Ignore;
 
 #[ORM\Entity(repositoryClass: PerfilRepository::class)]
-#[ORM\Table(name: 'Perfil', schema: 'gaming_essentials')]
+#[ORM\Table(name: 'perfil', schema: 'gaming_essentials')]
 class Perfil
 {
     #[ORM\Id]
@@ -31,9 +34,37 @@ class Perfil
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fecha_nacimiento = null;
 
-    #[ORM\OneToOne(targetEntity: Usuario::class, cascade: ["persist", "remove"])]
+    #[Ignore]
+    #[ORM\OneToOne(targetEntity: Usuario::class, cascade: ["remove"])]
     #[ORM\JoinColumn(name: 'id_usuario', referencedColumnName: 'id', nullable: false)] // Cambia nullable según tus necesidades
     private ?Usuario $usuario = null;
+
+
+
+//    #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'perfil', cascade: ['remove'])]
+//    private Collection $lineaPedidos;
+//
+//    #[ORM\OneToMany(targetEntity: Pedido::class, mappedBy: 'perfil', cascade: ['remove'])]
+//    private Collection $pedidos;
+////
+////
+//    public function __construct()
+//    {
+//        $this->lineaPedidos = new ArrayCollection();
+//        $this->pedidos = new ArrayCollection();
+//    }
+////
+//    public function getLineaPedidos(): Collection
+//    {
+//        return $this->lineaPedidos;
+//    }
+////
+//    public function getPedidos(): Collection
+//    {
+//        return $this->pedidos;
+//    }
+
+
 
     public function getId(): ?int
     {

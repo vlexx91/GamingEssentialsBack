@@ -26,8 +26,9 @@ class Pedido
     #[ORM\Column(name:"pago_total" )]
     private ?float $pagoTotal = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(name:"id_perfil",nullable: false)]
+
+    #[ORM\ManyToOne(targetEntity: Perfil::class, inversedBy: 'pedidos', cascade: ['remove'])]
+    #[ORM\JoinColumn(name: 'id_perfil', referencedColumnName: 'id', nullable: false)] // Cambia nullable según tus necesidades
     private ?Perfil $perfil = null;
 
 
