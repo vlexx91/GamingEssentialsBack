@@ -62,4 +62,39 @@ class PerfilController extends AbstractController
     }
 
 
+    #[Route('/editar/{id}', name: 'perfil_editar', methods: ['PUT'])]
+    public function edit(Request $request, EntityManagerInterface $em, Perfil $perfil): JsonResponse
+    {
+        $datos = json_decode($request->getContent(), true);
+
+        $perfil->setNombre($datos['nombre']);
+        $perfil->setApellido($datos['apellidos']);
+        $perfil->setDireccion($datos['direccion']);
+        $perfil->setDni($datos['dni']);
+        $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
+
+        $usuario = $perfil->getUsuario();
+        $usuario->setUsername($datos['username']);
+        $usuario->setPassword($datos['password']);
+        $usuario->setCorreo($datos['email']);
+        $usuario->setRol(Rol::CLIENTE);
+
+        $em->flush();
+
+        return $this->json(['message' => 'Perfil y Usuario actualizados correctamente'], Response::HTTP_OK);
+    }
+
+
+
+    #[Route('/{id}', name: 'perfil_buscar', methods: ['GET'])]
+    public function buscarPorId(int $id): JsonResponse
+    {
+        $perfil = $this->perfilRepository->find($id);
+
+        if (!$perfil) {
+            return $this->json(['message' => 'Perfil no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json($perfil, Response::HTTP_OK);
+    }
 }
