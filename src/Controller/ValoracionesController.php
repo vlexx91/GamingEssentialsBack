@@ -89,13 +89,19 @@ class ValoracionesController extends AbstractController
      * @return JsonResponse
      * metodo que crea promedio de las valoraciones
      */
-    #[Route('/promedio', name: 'valoraciones_promedio', methods: ['GET'])]
-    public function calcularPromedio(EntityManagerInterface $em): JsonResponse
+    #[Route('/promedio/{id}', name: 'valoraciones_promedio_producto', methods: ['GET'])]
+    public function calcularPromedioPorProducto(int $id, EntityManagerInterface $em): JsonResponse
     {
-        $valoraciones = $em->getRepository(Valoraciones::class)->findAll();
+        $producto = $em->getRepository(Producto::class)->find($id);
+
+        if (!$producto) {
+            return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        $valoraciones = $em->getRepository(Valoraciones::class)->findBy(['producto' => $producto]);
 
         if (count($valoraciones) === 0) {
-            return $this->json(['message' => 'No hay valoraciones disponibles'], Response::HTTP_NOT_FOUND);
+            return $this->json(['message' => 'No hay valoraciones disponibles para este producto'], Response::HTTP_NOT_FOUND);
         }
 
         $totalEstrellas = 0;
