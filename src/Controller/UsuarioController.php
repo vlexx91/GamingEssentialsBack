@@ -149,6 +149,7 @@ class UsuarioController extends AbstractController
 
         $perfil->setUsuario($usuario);
 
+
         // Persist both entities
         $em->persist($usuario);
         $em->persist($perfil);
