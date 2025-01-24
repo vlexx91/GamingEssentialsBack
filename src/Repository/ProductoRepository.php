@@ -38,4 +38,60 @@ class ProductoRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findAvailableProducts(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.disponibilidad = :val')
+            ->setParameter('val', true)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findById(int $id): ?Producto
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findByName(string $name): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.nombre LIKE :name')
+            ->setParameter('name', '%' . $name . '%')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByPlatform(string $platform): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.plataforma = :platform')
+            ->setParameter('platform', $platform)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByCategory(string $category): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.categoria = :category')
+            ->setParameter('category', $category)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByPriceRange(float $minPrice, float $maxPrice): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.precio >= :minPrice')
+            ->andWhere('p.precio <= :maxPrice')
+            ->setParameter('minPrice', $minPrice)
+            ->setParameter('maxPrice', $maxPrice)
+            ->getQuery()
+            ->getResult();
+    }
 }
