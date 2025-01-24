@@ -31,6 +31,7 @@ class Perfil
     #[ORM\Column(length: 9)]
     private ?string $dni = null;
 
+    #[Ignore]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fecha_nacimiento = null;
 
