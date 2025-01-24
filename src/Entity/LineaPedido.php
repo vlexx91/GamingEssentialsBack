@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\LineaPedidoRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
 
 #[ORM\Table(name: 'linea_pedido', schema: 'gaming_essentials')]
 #[ORM\Entity(repositoryClass: LineaPedidoRepository::class)]
@@ -13,21 +15,26 @@ class LineaPedido
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['linea_pedido'])]
     private ?int $id = null;
 
     #[ORM\Column(type: "integer")]
+    #[Groups(['linea_pedido'])]
     private ?int $cantidad = null;
 
     #[ORM\Column]
+    #[Groups(['linea_pedido'])]
     private ?float $precio = null;
 
-    #[ORM\ManyToOne(targetEntity: Producto::class, inversedBy: 'lineaPedidos',cascade: ['remove'])]
-    #[ORM\JoinColumn(name:'id_producto',nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Producto::class, inversedBy: 'lineaPedidos')]
+    #[ORM\JoinColumn(name:'id_producto',nullable: false,onDelete: 'NULL')]
+    #[Groups(['linea_pedido'])]
     private ?Producto $producto = null;
 
     #[ORM\ManyToOne(targetEntity: Pedido::class, inversedBy: 'lineaPedidos',cascade: ['remove'])]
-    #[ORM\JoinColumn(name:'id_pedido',nullable: false)]
-    private ?Pedido $Pedido = null;
+    #[ORM\JoinColumn(name:'id_pedido',referencedColumnName: 'id',nullable: false)]
+    #[Groups(['linea_pedido'])]
+    private ?Pedido $pedido = null;
 
     public function getId(): ?int
     {
@@ -72,12 +79,12 @@ class LineaPedido
 
     public function getPedido(): ?Pedido
     {
-        return $this->Pedido;
+        return $this->pedido;
     }
 
-    public function setPedido(?Pedido $Pedido): static
+    public function setPedido(?Pedido $pedido): static
     {
-        $this->Pedido = $Pedido;
+        $this->Pedido = $pedido;
 
         return $this;
     }

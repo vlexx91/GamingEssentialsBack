@@ -5,7 +5,9 @@ namespace App\Entity;
 use App\Enum\Categoria;
 use App\Enum\Plataforma;
 use App\Repository\ProductoRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ProductoRepository::class)]
 #[ORM\Table(name: 'Producto', schema: 'gaming_essentials')]
@@ -14,25 +16,48 @@ class Producto
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['producto'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 300)]
+    #[Groups(['producto'])]
     private ?string $nombre = null;
 
     #[ORM\Column(length: 750)]
+    #[Groups(['producto'])]
     private ?string $descripcion = null;
 
     #[ORM\Column]
+    #[Groups(['producto'])]
     private ?bool $disponibilidad = null;
 
     #[ORM\Column(type: 'float', precision: 10, scale: 2)]
+    #[Groups(['producto'])]
     private ?float $precio = null;
 
     #[ORM\Column(type: 'integer', enumType: Categoria::class)]
+    #[Groups(['producto'])]
     private ?Categoria $categoria = null;
 
     #[ORM\Column(type: 'integer', enumType: Plataforma::class)]
+    #[Groups(['producto'])]
     private ?Plataforma $plataforma = null;
+
+    #[ORM\OneToMany(mappedBy: 'producto', targetEntity: LineaPedido::class)]
+    #[Groups(['producto'])]
+    private Collection $lineaPedidos;
+
+    public function getLineaPedidos(): Collection
+    {
+        return $this->lineaPedidos;
+    }
+
+    public function setLineaPedidos(Collection $lineaPedidos): void
+    {
+        $this->lineaPedidos = $lineaPedidos;
+    }
+
+
 
 
     public function getId(): ?int

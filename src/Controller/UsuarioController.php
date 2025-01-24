@@ -93,7 +93,6 @@ class UsuarioController extends AbstractController
     public function mostrarDto(PerfilRepository $perfilRepository): JsonResponse
     {
         $perfiles = $perfilRepository->findAll();
-//        $usuarios = $this->usuarioRepository->findAll();
         $crearUsuarioPerfiles = [];
 
         foreach ($perfiles as $perfil){
@@ -148,6 +147,7 @@ class UsuarioController extends AbstractController
         $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
 
         $perfil->setUsuario($usuario);
+
 
         // Persist both entities
         $em->persist($usuario);

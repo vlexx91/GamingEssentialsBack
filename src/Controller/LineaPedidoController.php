@@ -3,18 +3,24 @@
 namespace App\Controller;
 
 use App\Repository\LineaPedidoRepository;
+use App\Repository\ProductoRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/linea_pedido')]
 class LineaPedidoController extends AbstractController
 {
     private LineaPedidoRepository $lineaPedidoRepository;
+    private ProductoRepository $productoRepository;
 
-    public function __construct(LineaPedidoRepository $lineaPedidoRepository)
+
+    public function __construct(LineaPedidoRepository $lineaPedidoRepository, ProductoRepository $productoRepository)
     {
         $this->lineaPedidoRepository = $lineaPedidoRepository;
+        $this->productoRepository = $productoRepository;
     }
 
     #[Route('', name: 'app_linea_pedido', methods: ['GET'])]
@@ -24,4 +30,26 @@ class LineaPedidoController extends AbstractController
 
         return $this->json($lineaPedido);
     }
+
+    // Método para obtener todas las líneas de pedido asociadas a un producto
+    #[Route('/producto/{id}', name: 'linea_pedido_by_producto', methods: ['GET'])]
+    public function findByProducto(int $id, SerializerInterface $serializer): JsonResponse
+    {
+        $producto = $this->productoRepository->find($id);
+
+        if (!$producto) {
+            return $this->json(['error' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        $lineasPedido = $this->lineaPedidoRepository->findByProducto($producto);
+
+        if (empty($lineasPedido)) {
+            return $this->json(['message' => 'No hay líneas de pedido asociadas a este producto'], Response::HTTP_OK);
+        }
+
+        $jsonData = $serializer->serialize($lineasPedido, 'json', ['groups' => ['linea_pedido']]);
+
+        return new JsonResponse($jsonData, Response::HTTP_OK, [], true);
+    }
+
 }
