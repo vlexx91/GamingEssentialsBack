@@ -93,7 +93,6 @@ class UsuarioController extends AbstractController
     public function mostrarDto(PerfilRepository $perfilRepository): JsonResponse
     {
         $perfiles = $perfilRepository->findAll();
-//        $usuarios = $this->usuarioRepository->findAll();
         $crearUsuarioPerfiles = [];
 
         foreach ($perfiles as $perfil){
