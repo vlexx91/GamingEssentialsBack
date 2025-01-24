@@ -20,9 +20,10 @@ class ProductoController extends AbstractController
     private ProductoRepository $productoRepository;
     private LineaPedidoRepository $lineaPedidoRepository;
 
-    public function __construct(ProductoRepository $productoRepository)
+    public function __construct(ProductoRepository $productoRepository, LineaPedidoRepository $lineaPedidoRepository)
     {
         $this->productoRepository = $productoRepository;
+        $this->lineaPedidoRepository = $lineaPedidoRepository;
     }
 
     #[Route('', name: 'app_producto' , methods: ['GET'])]
@@ -151,11 +152,11 @@ class ProductoController extends AbstractController
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        //$lineasPedidos = $this->lineaPedidoRepository->findBy(['producto' => $producto]); ¡IMPORTANTE! En esta linea, que necesita un servicio en el controlador de lineaPedido, , 'producto' -> $producto no es correcto, debería ser 'producto' => $producto->getId() o algo asi, necesitamos hacerlo por id no por objeto.
+        $lineasPedidos = $this->lineaPedidoRepository->findBy(['producto' => $producto]);
 
-        //if (count($lineasPedidos) > 0) {
-        //    return $this->json(['message' => 'No se puede eliminar el producto porque está asociado a uno o más pedidos'], Response::HTTP_CONFLICT);
-        //}
+        if (count($lineasPedidos) > 0) {
+            return $this->json(['message' => 'No se puede eliminar el producto porque está asociado a uno o más pedidos'], Response::HTTP_CONFLICT);
+        }
 
         $em->remove($producto);
         $em->flush();
