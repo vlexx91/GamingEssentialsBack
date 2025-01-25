@@ -43,6 +43,10 @@ class ValoracionesController extends AbstractController
     {
         $datos = json_decode($request->getContent(), true);
 
+        if ($datos['estrellas'] < 1 || $datos['estrellas'] > 5) {
+            return $this->json(['message' => 'La valoración debe estar entre 1 y 5 estrellas'], Response::HTTP_BAD_REQUEST);
+        }
+
         $usuario = $em->getRepository(Usuario::class)->find($datos['id_usuario']);
         $producto = $em->getRepository(Producto::class)->find($datos['id_producto']);
 
@@ -66,7 +70,7 @@ class ValoracionesController extends AbstractController
      * @param int $id
      * @param EntityManagerInterface $em
      * @return JsonResponse
-     * metodo eliminar valoracion por id de producto
+     * metodo eliminar valoracion
      */
 
     #[Route('/eliminar/{id}', name: 'valoraciones_eliminar', methods: ['DELETE'])]
@@ -87,7 +91,7 @@ class ValoracionesController extends AbstractController
     /**
      * @param EntityManagerInterface $em
      * @return JsonResponse
-     * metodo que crea promedio de las valoraciones
+     * metodo que crea promedio de las valoraciones en productos
      */
     #[Route('/promedio/{id}', name: 'valoraciones_promedio_producto', methods: ['GET'])]
     public function calcularPromedioPorProducto(int $id, EntityManagerInterface $em): JsonResponse
@@ -118,6 +122,10 @@ class ValoracionesController extends AbstractController
     public function editarValoracion(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
+
+        if (isset($datos['estrellas']) && ($datos['estrellas'] < 1 || $datos['estrellas'] > 5)) {
+            return $this->json(['message' => 'La valoración debe estar entre 1 y 5 estrellas'], Response::HTTP_BAD_REQUEST);
+        }
 
         $valoracion = $em->getRepository(Valoraciones::class)->find($id);
 
