@@ -27,6 +27,9 @@ class Producto
     #[Groups(['producto'])]
     private ?string $descripcion = null;
 
+    #[ORM\Column(length: 900)]
+    private ?string $imagen = null;
+
     #[ORM\Column]
     #[Groups(['producto'])]
     private ?bool $disponibilidad = null;
@@ -134,5 +137,15 @@ class Producto
         $this->plataforma = $plataforma;
 
         return $this;
+    }
+
+    public function getImagen(): ?string
+    {
+        return $this->imagen;
+    }
+
+    public function setImagen(?string $imagen): void
+    {
+        $this->imagen = $imagen;
     }
 }
