@@ -27,6 +27,7 @@ class Producto
     #[Groups(['producto'])]
     private ?string $descripcion = null;
 
+    //dato que faltaba
     #[ORM\Column(length: 900)]
     private ?string $imagen = null;
 
@@ -139,6 +140,7 @@ class Producto
         return $this;
     }
 
+    //getter y setter que faltaba
     public function getImagen(): ?string
     {
         return $this->imagen;
