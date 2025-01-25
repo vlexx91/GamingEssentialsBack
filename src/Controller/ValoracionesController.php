@@ -66,7 +66,7 @@ class ValoracionesController extends AbstractController
      * @param int $id
      * @param EntityManagerInterface $em
      * @return JsonResponse
-     * metodo eliminar valoracion por id
+     * metodo eliminar valoracion por id de producto
      */
 
     #[Route('/eliminar/{id}', name: 'valoraciones_eliminar', methods: ['DELETE'])]
