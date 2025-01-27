@@ -41,11 +41,11 @@ class Producto
 
     #[ORM\Column(type: 'integer', enumType: Categoria::class)]
     #[Groups(['producto'])]
-    private ?Categoria $categoria = null;
+    private ?int $categoria = null;
 
     #[ORM\Column(type: 'integer', enumType: Plataforma::class)]
     #[Groups(['producto'])]
-    private ?Plataforma $plataforma = null;
+    private ?int $plataforma = null;
 
     #[ORM\OneToMany(mappedBy: 'producto', targetEntity: LineaPedido::class)]
     #[Groups(['producto'])]
@@ -116,24 +116,24 @@ class Producto
 
         return $this;
     }
-    public function getCategoria(): ?Categoria
+    public function getCategoria(): ?int
     {
         return $this->categoria;
     }
 
-    public function setCategoria(Categoria $categoria): static
+    public function setCategoria(int $categoria): static
     {
         $this->categoria = $categoria;
 
         return $this;
     }
 
-    public function getPlataforma(): ?Plataforma
+    public function getPlataforma(): ?int
     {
         return $this->plataforma;
     }
 
-    public function setPlataforma(Plataforma $plataforma): static
+    public function setPlataforma(int $plataforma): static
     {
         $this->plataforma = $plataforma;
 

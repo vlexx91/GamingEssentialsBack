@@ -108,29 +108,4 @@ class CrearUsuarioPerfilDTO
     }
 
 
-    /**
-     * @param string|null $nombre
-     * @param string|null $username
-     * @param string|null $dni
-     * @param string|null $direccion
-     * @param \DateTimeInterface|null $fechaNacimiento
-     * @param string|null $apellidos
-     * @param string|null $email
-     * @param string|null $password
-     * @param Rol|null $rol
-     */
-//    public function __construct(?string $nombre, ?string $username, ?string $dni, ?string $direccion, ?\DateTimeInterface $fechaNacimiento, ?string $apellidos, ?string $email, ?string $password, ?Rol $rol)
-//    {
-//        $this->nombre = $nombre;
-//        $this->username = $username;
-//        $this->dni = $dni;
-//        $this->direccion = $direccion;
-//        $this->fechaNacimiento = $fechaNacimiento;
-//        $this->apellidos = $apellidos;
-//        $this->email = $email;
-//        $this->password = $password;
-//        $this->rol = $rol;
-//    }
-
-
 }
