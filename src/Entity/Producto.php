@@ -1,9 +1,6 @@
 <?php
 
 namespace App\Entity;
-
-use App\Enum\Categoria;
-use App\Enum\Plataforma;
 use App\Repository\ProductoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -28,11 +25,11 @@ class Producto
     #[ORM\Column(type: 'float', precision: 10, scale: 2)]
     private ?float $precio = null;
 
-    #[ORM\Column(type: 'integer', enumType: Categoria::class)]
-    private ?Categoria $categoria = null;
+    #[ORM\Column(type: 'integer')]
+    private ?int $categoria = null;
 
-    #[ORM\Column(type: 'integer', enumType: Plataforma::class)]
-    private ?Plataforma $plataforma = null;
+    #[ORM\Column(type: 'integer')]
+    private ?int $plataforma = null;
 
 
     public function getId(): ?int
@@ -87,24 +84,24 @@ class Producto
 
         return $this;
     }
-    public function getCategoria(): ?Categoria
+    public function getCategoria(): ?int
     {
         return $this->categoria;
     }
 
-    public function setCategoria(Categoria $categoria): static
+    public function setCategoria(int $categoria): static
     {
         $this->categoria = $categoria;
 
         return $this;
     }
 
-    public function getPlataforma(): ?Plataforma
+    public function getPlataforma(): ?int
     {
         return $this->plataforma;
     }
 
-    public function setPlataforma(Plataforma $plataforma): static
+    public function setPlataforma(int $plataforma): static
     {
         $this->plataforma = $plataforma;
 
