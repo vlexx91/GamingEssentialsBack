@@ -13,26 +13,29 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\ProductoRepository;
-#[Route('/producto')]
+use Symfony\Component\Serializer\SerializerInterface;
 
+#[Route('/producto')]
 class ProductoController extends AbstractController
 {
     private ProductoRepository $productoRepository;
     private LineaPedidoRepository $lineaPedidoRepository;
+    private SerializerInterface $serializer;
 
-    public function __construct(ProductoRepository $productoRepository, LineaPedidoRepository $lineaPedidoRepository)
+    public function __construct(ProductoRepository $productoRepository, LineaPedidoRepository $lineaPedidoRepository, SerializerInterface $serializer)
     {
         $this->productoRepository = $productoRepository;
         $this->lineaPedidoRepository = $lineaPedidoRepository;
+        $this->serializer = $serializer;
     }
 
-    #[Route('', name: 'app_producto' , methods: ['GET'])]
+    #[Route('', name: 'app_producto', methods: ['GET'])]
     public function index(): Response
     {
         $productos = $this->productoRepository->findAll();
+        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
 
-        return $this->json($productos);
-
+        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
     #[Route('/cliente', name: 'app_producto_cliente' , methods: ['GET'])]
