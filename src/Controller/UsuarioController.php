@@ -67,7 +67,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(Rol::CLIENTE);
+        $usuario->setRol(1);
 
         $em->persist($usuario);
         $em->flush();
@@ -84,7 +84,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(Rol::CLIENTE);
+        $usuario->setRol(1);
 
         $em->flush();
 
@@ -160,7 +160,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['email']);
-        $usuario->setRol(Rol::CLIENTE);
+        $usuario->setRol(1);
         // Create new Perfil and associate with Usuario
         $perfil = new Perfil();
         $perfil->setNombre($datos['nombre']);

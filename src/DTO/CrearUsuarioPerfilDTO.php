@@ -14,7 +14,7 @@ class CrearUsuarioPerfilDTO
     private ?string $apellidos = null;
     private ?string $email= null;
     private ?string $password= null;
-    private ?Rol $rol= null;
+    private ?int $rol= null;
 
 
     public function getNombre(): ?string
@@ -97,12 +97,12 @@ class CrearUsuarioPerfilDTO
         $this->password = $password;
     }
 
-    public function getRol(): ?Rol
+    public function getRol(): ?int
     {
         return $this->rol;
     }
 
-    public function setRol(?Rol $rol): void
+    public function setRol(?int $rol): void
     {
         $this->rol = $rol;
     }
