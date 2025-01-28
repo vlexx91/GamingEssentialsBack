@@ -76,13 +76,15 @@ class UsuarioController extends AbstractController
     }
 
     #[Route('/editar/{id}', name: 'usuario_editar', methods: ['PUT'])]
-    public function editar(Request $request, EntityManagerInterface $em, Usuario $usuario): JsonResponse
+    public function editar(Request $request, EntityManagerInterface $em,
+                           Usuario $usuario, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
+
         $datos = json_decode($request->getContent(), true);
 
 
         $usuario->setUsername($datos['username']);
-        $usuario->setPassword($datos['password']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario,$datos['password']));
         $usuario->setCorreo($datos['correo']);
         $usuario->setRol(1);
 
