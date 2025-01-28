@@ -125,7 +125,7 @@ class ProductoController extends AbstractController
         return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
     }
 
-    #[Route('/editar/{id}', name: 'app_producto_editar', methods: ['PUT'])]
+    #[Route('/editar/{id}', name: 'app_producto_editar', methods: ['PUT','POST'])]
     public function editarProducto(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $producto = $this->productoRepository->find($id);
@@ -134,8 +134,12 @@ class ProductoController extends AbstractController
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        $datos = $request->request->all();
+        $datos = $request->query->all() ?: $request->request->all();
         $archivo = $request->files->get('imagen');
+
+        if (!$datos) {
+            return $this->json(['message' => 'No se recibieron datos válidos'], Response::HTTP_BAD_REQUEST);
+        }
 
         // Procesar la nueva imagen si existe
         if ($archivo) {

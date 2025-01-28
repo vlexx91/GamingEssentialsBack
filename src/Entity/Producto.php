@@ -29,6 +29,7 @@ class Producto
 
     //dato que faltaba
     #[ORM\Column(length: 900)]
+    #[Groups(['producto'])]
     private ?string $imagen = null;
 
     #[ORM\Column]

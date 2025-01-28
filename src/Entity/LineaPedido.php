@@ -6,6 +6,7 @@ use App\Repository\LineaPedidoRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 
 #[ORM\Table(name: 'linea_pedido', schema: 'gaming_essentials')]
@@ -28,12 +29,12 @@ class LineaPedido
 
     #[ORM\ManyToOne(targetEntity: Producto::class, inversedBy: 'lineaPedidos')]
     #[ORM\JoinColumn(name:'id_producto',nullable: false,onDelete: 'NULL')]
-    #[Groups(['linea_pedido'])]
+    #[Ignore]
     private ?Producto $producto = null;
 
     #[ORM\ManyToOne(targetEntity: Pedido::class, inversedBy: 'lineaPedidos',cascade: ['remove'])]
     #[ORM\JoinColumn(name:'id_pedido',referencedColumnName: 'id',nullable: false)]
-    #[Groups(['linea_pedido'])]
+    #[Ignore]
     private ?Pedido $pedido = null;
 
     public function getId(): ?int
