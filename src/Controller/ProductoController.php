@@ -99,15 +99,33 @@ class ProductoController extends AbstractController
     #[Route('/crear', name: 'app_producto_crear', methods: ['POST'])]
     public function crearProducto(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $datos = json_decode($request->getContent(), true);
+        $nombreImagen = null;
+
+        // Verifica si hay una imagen en la solicitud
+        if ($request->files->has('imagen')) {
+            $archivo = $request->files->get('imagen');
+
+            // Validación del archivo
+            if (!$archivo->isValid() || !in_array($archivo->getMimeType(), ['image/jpeg', 'image/png'])) {
+                return $this->json(['message' => 'El archivo debe ser una imagen válida (JPEG o PNG)'], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Define un nombre único y guarda la imagen
+            $nombreImagen = uniqid('producto_', true) . '.' . $archivo->guessExtension();
+            $directorio = $this->getParameter('directorio_imagenes'); // Defínelo en el archivo config/services.yaml
+            $archivo->move($directorio, $nombreImagen);
+        }
+
+        $datos = $request->request->all();
 
         $producto = new Producto();
         $producto->setNombre($datos['nombre']);
         $producto->setDescripcion($datos['descripcion']);
-        $producto->setDisponibilidad($datos['disponibilidad']);
-        $producto->setPlataforma(Plataforma::from($datos['plataforma'])); // Convert to enum
-        $producto->setPrecio($datos['precio']);
+        $producto->setDisponibilidad(filter_var($datos['disponibilidad'], FILTER_VALIDATE_BOOLEAN));
+        $producto->setPlataforma(Plataforma::from($datos['plataforma']));
+        $producto->setPrecio(floatval($datos['precio']));
         $producto->setCategoria(Categoria::from($datos['categoria']));
+        $producto->setImagen($nombreImagen); // Guarda el nombre del archivo en la base de datos
 
         $em->persist($producto);
         $em->flush();
@@ -124,7 +142,30 @@ class ProductoController extends AbstractController
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        $datos = json_decode($request->getContent(), true);
+        $datos = $request->request->all();
+        $archivo = $request->files->get('imagen');
+
+        // Procesar la nueva imagen si existe
+        if ($archivo) {
+            if (!$archivo->isValid() || !in_array($archivo->getMimeType(), ['image/jpeg', 'image/png'])) {
+                return $this->json(['message' => 'El archivo debe ser una imagen válida (JPEG o PNG)'], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Borra la imagen anterior
+            if ($producto->getImagen()) {
+                $directorio = $this->getParameter('directorio_imagenes');
+                $rutaImagenAnterior = $directorio . '/' . $producto->getImagen();
+                if (file_exists($rutaImagenAnterior)) {
+                    unlink($rutaImagenAnterior);
+                }
+            }
+
+            // Guarda la nueva imagen
+            $nombreImagen = uniqid('producto_', true) . '.' . $archivo->guessExtension();
+            $directorio = $this->getParameter('directorio_imagenes');
+            $archivo->move($directorio, $nombreImagen);
+            $producto->setImagen($nombreImagen);
+        }
 
         if (isset($datos['nombre'])) {
             $producto->setNombre($datos['nombre']);
@@ -133,13 +174,13 @@ class ProductoController extends AbstractController
             $producto->setDescripcion($datos['descripcion']);
         }
         if (isset($datos['disponibilidad'])) {
-            $producto->setDisponibilidad($datos['disponibilidad']);
+            $producto->setDisponibilidad(filter_var($datos['disponibilidad'], FILTER_VALIDATE_BOOLEAN));
         }
         if (isset($datos['plataforma'])) {
             $producto->setPlataforma(Plataforma::from($datos['plataforma']));
         }
         if (isset($datos['precio'])) {
-            $producto->setPrecio($datos['precio']);
+            $producto->setPrecio(floatval($datos['precio']));
         }
         if (isset($datos['categoria'])) {
             $producto->setCategoria(Categoria::from($datos['categoria']));
