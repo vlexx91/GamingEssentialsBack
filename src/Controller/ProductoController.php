@@ -42,8 +42,9 @@ class ProductoController extends AbstractController
     public function indexCliente(): Response
     {
         $productos = $this->productoRepository->findAvailableProducts();
+        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
 
-        return $this->json($productos);
+        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
 
     }
 
@@ -63,32 +64,36 @@ class ProductoController extends AbstractController
     public function buscarNombre(string $nombre): Response
     {
         $productos = $this->productoRepository->findByName($nombre);
+        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
 
-        return $this->json($productos);
+        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
     #[Route('/buscar/plataforma/{platform}', name: 'app_producto_buscar_plataforma', methods: ['GET'])]
     public function buscarPlataforma(string $platform): Response
     {
         $productos = $this->productoRepository->findByPlatform($platform);
+        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
 
-        return $this->json($productos);
+        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
     #[Route('/buscar/categoria/{category}', name: 'app_producto_buscar_categoria', methods: ['GET'])]
     public function buscarPorCategoria(string $category): Response
     {
         $productos = $this->productoRepository->findByCategory($category);
+        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
 
-        return $this->json($productos);
+        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
     #[Route('/buscar/precio/{minPrice}/{maxPrice}', name: 'app_producto_buscar_precio', methods: ['GET'])]
     public function buscarPorRangoDePrecio(float $minPrice, float $maxPrice): Response
     {
         $productos = $this->productoRepository->findByPriceRange($minPrice, $maxPrice);
+        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
 
-        return $this->json($productos);
+        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
     #[Route('/crear', name: 'app_producto_crear', methods: ['POST'])]
