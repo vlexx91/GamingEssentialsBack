@@ -12,9 +12,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasher;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/usuario')]
+#[Route('/api/usuario')]
 class UsuarioController extends AbstractController
 {
     private UsuarioRepository $usuarioRepository;
@@ -26,6 +28,27 @@ class UsuarioController extends AbstractController
         $this->perfilRepository =$perfilRepository;
 
     }
+
+
+    #[Route('/registro', name: 'app_usuario1', methods: ["POST"])]
+    public function registro(Request $request, EntityManagerInterface $em,
+                             UserPasswordHasherInterface $userPasswordHasher,): JsonResponse
+    {
+        $datos = json_decode($request->getContent(), true);
+
+        $usuario = new Usuario();
+        $usuario->setUsername($datos['username']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
+        $usuario->setCorreo($datos['correo']);
+        $usuario->setRol(1);
+
+        $em->persist($usuario);
+        $em->flush();
+
+        return $this->json(['message' => 'Usuario creado'], Response::HTTP_CREATED);
+    }
+
+
 
     #[Route('', name: 'app_usuario' , methods: ['GET'])]
     public function index(): Response
@@ -44,7 +67,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(Rol::CLIENTE);
+        $usuario->setRol(1);
 
         $em->persist($usuario);
         $em->flush();
@@ -61,7 +84,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(Rol::CLIENTE);
+        $usuario->setRol(1);
 
         $em->flush();
 
@@ -137,7 +160,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['email']);
-        $usuario->setRol(Rol::CLIENTE);
+        $usuario->setRol(1);
         // Create new Perfil and associate with Usuario
         $perfil = new Perfil();
         $perfil->setNombre($datos['nombre']);

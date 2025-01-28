@@ -17,6 +17,7 @@
 ###> symfony/phpunit-bridge ###
 .phpunit.result.cache
 /phpunit.xml
+/phpunit.xml.dist
 ###< symfony/phpunit-bridge ###
 
 ###> symfony/asset-mapper ###
@@ -32,6 +33,11 @@
 /.idea/php.xml
 /.idea/dataSources.xml
 /.idea/phpunit.xml
+/.idea/commandlinetools/schemas/frameworkDescriptionVersion1.1.4.xsd
 /.idea/commandlinetools/Symfony_23_1_25__22_21.xml
 /.idea/commandlinetools/schemas/frameworkDescriptionVersion1.1.4.xsd
 /.idea/commandlinetools/Symfony_25_1_25__1_29.xml
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###
