@@ -259,6 +259,29 @@ class UsuarioController extends AbstractController
     }
 
 
+    #[Route('/RolToken', name: 'rol_token', methods: ['GET'])]
+    public function obtenerRolDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
+        $token = $request->headers->get('authorization');
+        if (!$token) {
+            return new JsonResponse(['message' => 'No token provided'], 401);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+        $finalToken = $jwtManager->parse($formatToken);
+
+        $username = $finalToken['username'] ?? null;
+        if (!$username) {
+            return new JsonResponse(['message' => 'Invalid token'], 403);
+        }
+
+        $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            return new JsonResponse(['message' => 'User not found'], 404);
+        }
+
+        return new JsonResponse(['user_rol' => $user->getRol()]);
+    }
 
 
 }
