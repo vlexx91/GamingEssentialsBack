@@ -29,6 +29,7 @@ class Producto
 
     //dato que faltaba
     #[ORM\Column(length: 900)]
+    #[Groups(['producto'])]
     private ?string $imagen = null;
 
     #[ORM\Column]
@@ -48,7 +49,6 @@ class Producto
     private ?Plataforma $plataforma = null;
 
     #[ORM\OneToMany(mappedBy: 'producto', targetEntity: LineaPedido::class)]
-    #[Groups(['producto'])]
     private Collection $lineaPedidos;
 
     public function getLineaPedidos(): Collection

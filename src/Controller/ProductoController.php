@@ -52,12 +52,13 @@ class ProductoController extends AbstractController
     public function productoInfo(int $id): Response
     {
         $producto = $this->productoRepository->findById($id);
+        $jsonContent = $this->serializer->serialize($producto, 'json', ['groups' => 'producto']);
 
         if (!$producto) {
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        return $this->json($producto);
+        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
     #[Route('/buscar/nombre/{nombre}', name: 'app_producto_buscar', methods: ['GET'])]
@@ -133,7 +134,7 @@ class ProductoController extends AbstractController
         return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
     }
 
-    #[Route('/editar/{id}', name: 'app_producto_editar', methods: ['PUT'])]
+    #[Route('/editar/{id}', name: 'app_producto_editar', methods: ['POST'])]
     public function editarProducto(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $producto = $this->productoRepository->find($id);
@@ -167,6 +168,7 @@ class ProductoController extends AbstractController
             $producto->setImagen($nombreImagen);
         }
 
+        // Actualizar los campos del producto
         if (isset($datos['nombre'])) {
             $producto->setNombre($datos['nombre']);
         }
@@ -186,6 +188,7 @@ class ProductoController extends AbstractController
             $producto->setCategoria(Categoria::from($datos['categoria']));
         }
 
+        // Persistir y guardar los cambios
         $em->persist($producto);
         $em->flush();
 
