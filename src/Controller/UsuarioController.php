@@ -76,13 +76,15 @@ class UsuarioController extends AbstractController
     }
 
     #[Route('/editar/{id}', name: 'usuario_editar', methods: ['PUT'])]
-    public function editar(Request $request, EntityManagerInterface $em, Usuario $usuario): JsonResponse
+    public function editar(Request $request, EntityManagerInterface $em,
+                           Usuario $usuario, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
+
         $datos = json_decode($request->getContent(), true);
 
 
         $usuario->setUsername($datos['username']);
-        $usuario->setPassword($datos['password']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario,$datos['password']));
         $usuario->setCorreo($datos['correo']);
         $usuario->setRol(1);
 
@@ -181,6 +183,55 @@ class UsuarioController extends AbstractController
     }
 
 
+
+
+
+    /**
+     * ADMINISTRADOR
+     */
+
+
+    #[Route('/crearAdmin', name: 'usuario_crear_admin', methods: ['POST'])]
+    public function crearAdmin(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
+    {
+
+        $datos = json_decode($request->getContent(), true);
+
+        $usuario = new Usuario();
+        $usuario->setUsername($datos['username']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
+        $usuario->setCorreo($datos['correo']);
+        $usuario->setRol(0);
+
+        $em->persist($usuario);
+        $em->flush();
+
+        return $this->json(['message' => 'Admin creado'], Response::HTTP_CREATED);
+    }
+
+
+    /**
+     * Crear Gestor teniendo el rol de administrador
+     *
+     */
+
+    #[Route('/crearGestor', name: 'usuario_crear_gestor', methods: ['POST'])]
+    public function crearGestor(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
+    {
+
+        $datos = json_decode($request->getContent(), true);
+
+        $usuario = new Usuario();
+        $usuario->setUsername($datos['username']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
+        $usuario->setCorreo($datos['correo']);
+        $usuario->setRol(2);
+
+        $em->persist($usuario);
+        $em->flush();
+
+        return $this->json(['message' => 'Gestor creado'], Response::HTTP_CREATED);
+    }
 
 
 
