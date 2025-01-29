@@ -186,5 +186,54 @@ class UsuarioController extends AbstractController
 
 
 
+    /**
+     * ADMINISTRADOR
+     */
+
+
+    #[Route('/crearAdmin', name: 'usuario_crear_admin', methods: ['POST'])]
+    public function crearAdmin(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
+    {
+
+        $datos = json_decode($request->getContent(), true);
+
+        $usuario = new Usuario();
+        $usuario->setUsername($datos['username']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
+        $usuario->setCorreo($datos['correo']);
+        $usuario->setRol(0);
+
+        $em->persist($usuario);
+        $em->flush();
+
+        return $this->json(['message' => 'Admin creado'], Response::HTTP_CREATED);
+    }
+
+
+    /**
+     * Crear Gestor teniendo el rol de administrador
+     *
+     */
+
+    #[Route('/crearGestor', name: 'usuario_crear_gestor', methods: ['POST'])]
+    public function crearGestor(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
+    {
+
+        $datos = json_decode($request->getContent(), true);
+
+        $usuario = new Usuario();
+        $usuario->setUsername($datos['username']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
+        $usuario->setCorreo($datos['correo']);
+        $usuario->setRol(2);
+
+        $em->persist($usuario);
+        $em->flush();
+
+        return $this->json(['message' => 'Gestor creado'], Response::HTTP_CREATED);
+    }
+
+
+
 
 }
