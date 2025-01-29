@@ -8,6 +8,7 @@ use App\Enum\Rol;
 use App\Repository\PerfilRepository;
 use App\Repository\UsuarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -231,6 +232,30 @@ class UsuarioController extends AbstractController
         $em->flush();
 
         return $this->json(['message' => 'Gestor creado'], Response::HTTP_CREATED);
+    }
+
+    #[Route('/idToken', name: 'id_token', methods: ['GET'])]
+    public function obtenerIdDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
+        $token = $request->headers->get('authorization');
+        if (!$token) {
+            return new JsonResponse(['message' => 'No token provided'], 401);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+        $finalToken = $jwtManager->parse($formatToken);
+
+        $username = $finalToken['username'] ?? null;
+        if (!$username) {
+            return new JsonResponse(['message' => 'Invalid token'], 403);
+        }
+
+        $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            return new JsonResponse(['message' => 'User not found'], 404);
+        }
+
+        return new JsonResponse(['user_id' => $user->getId()]);
     }
 
 
