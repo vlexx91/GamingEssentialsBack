@@ -61,37 +61,24 @@ class ProductoController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/buscar/nombre/{nombre}', name: 'app_producto_buscar', methods: ['GET'])]
-    public function buscarNombre(string $nombre): Response
+    #[Route('/buscar', name: 'app_producto_buscar', methods: ['GET'])]
+    public function buscar(Request $request): Response
     {
-        $productos = $this->productoRepository->findByName($nombre);
-        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
+        $nombre = $request->query->get('nombre');
+        $plataforma = $request->query->get('plataforma');
+        $categoria = $request->query->get('categoria');
+        $minPrecio = $request->query->get('minPrecio');
+        $maxPrecio = $request->query->get('maxPrecio');
 
-        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
-    }
+        $criterios = array_filter([
+            'nombre' => $nombre,
+            'plataforma' => $plataforma,
+            'categoria' => $categoria,
+            'minPrecio' => $minPrecio,
+            'maxPrecio' => $maxPrecio,
+        ]);
 
-    #[Route('/buscar/plataforma/{platform}', name: 'app_producto_buscar_plataforma', methods: ['GET'])]
-    public function buscarPlataforma(string $platform): Response
-    {
-        $productos = $this->productoRepository->findByPlatform($platform);
-        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
-
-        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
-    }
-
-    #[Route('/buscar/categoria/{category}', name: 'app_producto_buscar_categoria', methods: ['GET'])]
-    public function buscarPorCategoria(string $category): Response
-    {
-        $productos = $this->productoRepository->findByCategory($category);
-        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
-
-        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
-    }
-
-    #[Route('/buscar/precio/{minPrice}/{maxPrice}', name: 'app_producto_buscar_precio', methods: ['GET'])]
-    public function buscarPorRangoDePrecio(float $minPrice, float $maxPrice): Response
-    {
-        $productos = $this->productoRepository->findByPriceRange($minPrice, $maxPrice);
+        $productos = $this->productoRepository->findByCriteria($criterios);
         $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
 
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
