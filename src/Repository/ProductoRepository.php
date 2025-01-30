@@ -64,7 +64,7 @@ class ProductoRepository extends ServiceEntityRepository
             ->setParameter('val', true);
 
         if (!empty($criterios['nombre'])) {
-            $qb->andWhere('p.nombre LIKE :nombre or LOWER(p.nombre) LIKE :nombre')
+            $qb->andWhere('UPPER(p.nombre) LIKE :nombre or LOWER(p.nombre) LIKE :nombre')
                 ->setParameter('nombre', '%' . $criterios['nombre'] . '%');
         }
 
