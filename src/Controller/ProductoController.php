@@ -100,39 +100,27 @@ class ProductoController extends AbstractController
     #[Route('/crear', name: 'app_producto_crear', methods: ['POST'])]
     public function crearProducto(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $nombreImagen = null;
+        $datos = json_decode($request->getContent(), true);
 
-        // Verifica si hay una imagen en la solicitud
-        if ($request->files->has('imagen')) {
-            $archivo = $request->files->get('imagen');
-
-            // Validación del archivo
-            if (!$archivo->isValid() || !in_array($archivo->getMimeType(), ['image/jpeg', 'image/png'])) {
-                return $this->json(['message' => 'El archivo debe ser una imagen válida (JPEG o PNG)'], Response::HTTP_BAD_REQUEST);
-            }
-
-            // Define un nombre único y guarda la imagen
-            $nombreImagen = uniqid('producto_', true) . '.' . $archivo->guessExtension();
-            $directorio = $this->getParameter('directorio_imagenes'); // Defínelo en el archivo config/services.yaml
-            $archivo->move($directorio, $nombreImagen);
+        if (!isset($datos['nombre'], $datos['descripcion'], $datos['precio'], $datos['categoria'], $datos['plataforma'], $datos['imagen'])) {
+            return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
         }
-
-        $datos = $request->request->all();
 
         $producto = new Producto();
         $producto->setNombre($datos['nombre']);
         $producto->setDescripcion($datos['descripcion']);
-        $producto->setDisponibilidad(filter_var($datos['disponibilidad'], FILTER_VALIDATE_BOOLEAN));
+        $producto->setDisponibilidad($datos['disponibilidad'] ?? true);
         $producto->setPlataforma(Plataforma::from($datos['plataforma']));
         $producto->setPrecio(floatval($datos['precio']));
         $producto->setCategoria(Categoria::from($datos['categoria']));
-        $producto->setImagen($nombreImagen); // Guarda el nombre del archivo en la base de datos
+        $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
 
         $em->persist($producto);
         $em->flush();
 
         return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
     }
+
 
     #[Route('/editar/{id}', name: 'app_producto_editar', methods: ['POST'])]
     public function editarProducto(int $id, Request $request, EntityManagerInterface $em): JsonResponse
