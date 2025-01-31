@@ -203,4 +203,14 @@ class ProductoController extends AbstractController
 
         return $this->json(['message' => 'Producto eliminado correctamente'], Response::HTTP_OK);
     }
+
+
+    #[Route('/aleatorios', name: 'app_producto_aleatorios', methods: ['GET'])]
+    public function productosAleatorios(): Response
+    {
+        $productos = $this->productoRepository->findRandomProducts(10);
+
+        return $this->json($productos);
+    }
+
 }

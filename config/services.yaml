@@ -4,6 +4,11 @@ parameters:
     directorio_imagenes: '%kernel.project_dir%/public/uploads/productos'
 
 services:
+    App\Repository\DoctrineRandomFunction:
+        arguments:
+            $doctrineConnection: '@doctrine.dbal.default_connection'
+        tags:
+            - { name: 'doctrine.dbal.connection_factory' }
     _defaults:
         autowire: true
         autoconfigure: true
