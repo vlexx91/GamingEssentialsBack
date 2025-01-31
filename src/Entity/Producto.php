@@ -51,7 +51,6 @@ class Producto
 
     #[Ignore]
     #[ORM\OneToMany(mappedBy: 'producto', targetEntity: LineaPedido::class)]
-    #[Groups(['producto'])]
     private Collection $lineaPedidos;
 
     public function getLineaPedidos(): Collection
