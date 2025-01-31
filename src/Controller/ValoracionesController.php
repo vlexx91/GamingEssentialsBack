@@ -146,4 +146,34 @@ class ValoracionesController extends AbstractController
         return $this->json(['message' => 'Valoración editada correctamente'], Response::HTTP_OK);
     }
 
+    /**
+     * metodo para sacar top 5 productos mejor valorados
+     */
+
+    #[Route('/topcinco', name: 'top_cinco', methods: ['GET'])]
+    public function obtenerTopValorados(EntityManagerInterface $em): JsonResponse
+    {
+        $productos = $em->getRepository(Producto::class)->findAll();
+
+        if (!$productos) {
+            return $this->json(['message' => 'No hay productos disponibles'], Response::HTTP_NOT_FOUND);
+        }
+
+        $promedios = [];
+
+        foreach ($productos as $producto) {
+            $valoraciones = $em->getRepository(Valoraciones::class)->findBy(['producto' => $producto]);
+
+            if (count($valoraciones) > 0) {
+                $totalEstrellas = array_sum(array_map(fn($v) => $v->getEstrellas(), $valoraciones));
+                $promedio = $totalEstrellas / count($valoraciones);
+                $promedios[] = ['producto' => $producto->getId(), 'promedio' => $promedio];
+            }
+        }
+
+        usort($promedios, fn($a, $b) => $b['promedio'] <=> $a['promedio']);
+        $topProductos = array_slice($promedios, 0, 5);
+
+        return $this->json(['top_5_productos' => $topProductos], Response::HTTP_OK);
+    }
 }
