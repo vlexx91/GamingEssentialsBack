@@ -30,7 +30,7 @@ class ProductoController extends AbstractController
         $this->serializer = $serializer;
     }
 
-    #[Route('gestor/mostrar', name: 'app_producto', methods: ['GET'])]
+    #[Route('/gestor/mostrar', name: 'app_producto', methods: ['GET'])]
     public function index(): Response
     {
         $productos = $this->productoRepository->findAll();
@@ -192,8 +192,8 @@ class ProductoController extends AbstractController
         return $this->json($productos);
     }
 
-    #[Route('/crear/gestor', name: 'app_producto_crear_gestor', methods: ['POST'])]
-    #[IsGranted('ROLE_GESTOR')]
+    #[Route('/gestor/crear', name: 'app_producto_crear_gestor', methods: ['POST'])]
+//    #[IsGranted('ROLE_GESTOR')]
     public function crearProductoGestor(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
