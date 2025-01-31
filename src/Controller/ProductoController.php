@@ -205,12 +205,41 @@ class ProductoController extends AbstractController
     }
 
 
-    #[Route('/aleatorios', name: 'app_producto_aleatorios', methods: ['GET'])]
-    public function productosAleatorios(): Response
+    #[Route('/aleatorios', name: 'app_producto_cliente_random' , methods: ['GET'])]
+    public function indexClienteRandom(): Response
     {
-        $productos = $this->productoRepository->findRandomProducts(10);
+        $productos = $this->productoRepository->findAvailableProducts();
+
+        // Si hay menos de 10 productos, se devuelven todos
+        $totalProductos = count($productos);
+        if ($totalProductos <= 10) {
+            $productosAleatorios = $productos;
+        } else {
+            $productosAleatorios = [];
+            $indicesSeleccionados = [];
+
+            // Seleccionamos 10 índices aleatorios sin repetición
+            while (count($productosAleatorios) < 10) {
+                $indice = random_int(0, $totalProductos - 1);
+                if (!in_array($indice, $indicesSeleccionados)) {
+                    $indicesSeleccionados[] = $indice;
+                    $productosAleatorios[] = $productos[$indice];
+                }
+            }
+        }
+
+        $jsonContent = $this->serializer->serialize($productosAleatorios, 'json', ['groups' => 'producto']);
+
+        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/masvendidos', name: 'productos_mas_vendidos', methods: ['GET'])]
+    public function productosMasVendidos(ProductoRepository $productoRepository): JsonResponse
+    {
+        $productos = $productoRepository->findTop5MasVendidos();
 
         return $this->json($productos);
     }
+
 
 }
