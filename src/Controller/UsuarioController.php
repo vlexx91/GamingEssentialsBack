@@ -215,16 +215,14 @@ class UsuarioController extends AbstractController
      *
      */
 
-    #[Route('/crearGestor', name: 'usuario_crear_gestor', methods: ['POST'])]
+    #[Route('/gestor/crear', name: 'usuario_crear_gestor', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
     public function crearGestor(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
 
         $datos = json_decode($request->getContent(), true);
 
-        if (!isset($datos['rol'])) {
-            return $this->json(['message' => 'Rol is required'], Response::HTTP_BAD_REQUEST);
-        }
+
 
 
         $usuario = new Usuario();
