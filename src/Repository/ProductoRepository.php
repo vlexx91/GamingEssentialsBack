@@ -6,11 +6,15 @@ use App\Entity\Producto;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+
 /**
  * @extends ServiceEntityRepository<Producto>
  */
 class ProductoRepository extends ServiceEntityRepository
 {
+
+    private $randomFunction;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Producto::class);
@@ -90,4 +94,33 @@ class ProductoRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    public function findRandomProducts(int $limit = 10): array
+    {
+        // Utiliza la conexión de Doctrine para ejecutar una consulta SQL directa
+        $connection = $this->getEntityManager()->getConnection();
+
+        // Realiza la consulta SQL directamente
+        $sql = 'SELECT * FROM gaming_essentials.producto ORDER BY RANDOM() LIMIT :limit';
+
+        // Prepara y ejecuta la consulta
+        $stmt = $connection->prepare($sql);
+        $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
+
+        // Obtén el resultado de la consulta
+        return $stmt->executeQuery()->fetchAllAssociative();
+    }
+
+
+//    public function findRandomProducts(int $limit = 10)
+//    {
+//        return $this->createQueryBuilder('p')
+//            ->orderBy('p.id', 'ASC')  // Ordena por el campo 'id' de forma ascendente
+//            ->setMaxResults($limit)   // Limita el número de resultados a $limit
+//            ->getQuery()
+//            ->getResult();
+//    }
+
+
+
 }
