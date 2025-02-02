@@ -123,10 +123,10 @@ class ProductoController extends AbstractController
     }
 
 
-    #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['POST'])]
-    public function editarProducto(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['PUT'])]
+    public function editarProducto( Request $request, EntityManagerInterface $em, Producto $producto): JsonResponse
     {
-        $producto = $this->productoRepository->find($id);
+        $datos = json_decode($request->getContent(), true);
 
         if (!$producto) {
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
@@ -156,7 +156,7 @@ class ProductoController extends AbstractController
         }
 
         // Persistir y guardar los cambios
-        $em->persist($producto);
+//        $em->persist($producto);
         $em->flush();
 
         return $this->json(['message' => 'Producto editado correctamente'], Response::HTTP_OK);
