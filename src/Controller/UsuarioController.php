@@ -151,7 +151,7 @@ class UsuarioController extends AbstractController
 
 
     #[Route('/crearDTO', name: 'usuario_crear', methods: ['POST'])]
-    public function crearDto(Request $request, EntityManagerInterface $em): JsonResponse
+    public function crearDto(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
 
@@ -160,10 +160,9 @@ class UsuarioController extends AbstractController
         // Create new Usuario
         $usuario = new Usuario();
         $usuario->setUsername($datos['username']);
-        $usuario->setPassword($datos['password']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['email']);
-        $usuario->setRol(1);
-        // Create new Perfil and associate with Usuario
+        $usuario->setRol(Rol::CLIENTE->value);        // Create new Perfil and associate with Usuario
         $perfil = new Perfil();
         $perfil->setNombre($datos['nombre']);
         $perfil->setApellido($datos['apellidos']);
@@ -233,7 +232,29 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Gestor creado'], Response::HTTP_CREATED);
     }
 
+    #[Route('/editarGestor/{id}', name: 'usuario_editar_gestor', methods: ['PUT'])]
+    public function editarGestor(int $id, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
+    {
+        $datos = json_decode($request->getContent(), true);
 
+        $usuario = $this->usuarioRepository->find($id);
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($usuario->getRol() !== Rol::GESTOR->value) {
+            return $this->json(['message' => 'El usuario no es un gestor'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $usuario->setUsername($datos['username']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
+        $usuario->setCorreo($datos['correo']);
+
+        $em->flush();
+
+        return $this->json(['message' => 'Gestor editado correctamente'], Response::HTTP_OK);
+    }
 
 
 }
