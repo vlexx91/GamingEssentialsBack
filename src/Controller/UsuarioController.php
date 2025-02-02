@@ -256,5 +256,32 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Gestor editado correctamente'], Response::HTTP_OK);
     }
 
+    #[Route('/gestores', name: 'usuario_listar_gestores', methods: ['GET'])]
+    public function listarGestores(): JsonResponse
+    {
+        $gestores = $this->usuarioRepository->findBy(['rol' => Rol::GESTOR->value]);
+
+        return $this->json($gestores, Response::HTTP_OK);
+    }
+
+    #[Route('/eliminarGestor/{id}', name: 'usuario_eliminar_gestor', methods: ['DELETE'])]
+    public function eliminarGestor(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $usuario = $this->usuarioRepository->find($id);
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($usuario->getRol() !== Rol::GESTOR->value) {
+            return $this->json(['message' => 'El usuario no es un gestor'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $em->remove($usuario);
+        $em->flush();
+
+        return $this->json(['message' => 'Gestor eliminado correctamente'], Response::HTTP_OK);
+    }
+
 
 }
