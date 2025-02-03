@@ -42,7 +42,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol('ROLE_CLIENTE');
+        $usuario->setRol(1);
 
         $em->persist($usuario);
         $em->flush();
@@ -268,35 +268,29 @@ class UsuarioController extends AbstractController
 
     #[Route('/mostrarPerfil', name: 'usuario_mostrar_uno', methods: ['GET'])]
     public function mostrarPerfil(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager, PerfilRepository $perfilRepository): JsonResponse{
-        // Obtener el token del encabezado de la solicitud
         $token = $request->headers->get('authorization');
         if (!$token) {
             return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Formatear el token
         $formatToken = str_replace('Bearer ', '', $token);
         $finalToken = $jwtManager->parse($formatToken);
 
-        // Obtener el nombre de usuario desde el token
         $username = $finalToken['username'] ?? null;
         if (!$username) {
             return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
         }
 
-        // Buscar al usuario en la base de datos
         $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
         if (!$user) {
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Buscar el perfil del usuario usando su ID
         $perfil = $perfilRepository->findOneBy(['usuario' => $user->getId()]);
         if (!$perfil) {
             return new JsonResponse(['message' => 'Profile not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Crear el DTO con la información del perfil
         $perfilCrearDTO = new CrearUsuarioPerfilDTO();
         $perfilCrearDTO->setNombre($perfil->getNombre());
         $perfilCrearDTO->setApellidos($perfil->getApellido());
