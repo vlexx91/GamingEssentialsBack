@@ -41,13 +41,17 @@ class CarritoController extends AbstractController
         } else {
             $cart[$productId] = [
                 'id' => $product->getId(),
-                'name' => $product->getName(),
-                'price' => $product->getPrice(),
+                'name' => $product->getNombre(),
+                'price' => $product->getPrecio(),
                 'quantity' => $quantity,
+                'imageUrl' => $product->getImagen() // Asegúrate de tener un campo de imagen
             ];
         }
 
+        // Guardar en sesión
         $session->set('cart', $cart);
+
+
         return $this->json(['message' => 'Producto agregado al carrito']);
     }
 
