@@ -95,32 +95,16 @@ class ProductoRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function findRandomProducts(int $limit = 10): array
+    public function findTop5MasVendidos()
     {
-        // Utiliza la conexión de Doctrine para ejecutar una consulta SQL directa
-        $connection = $this->getEntityManager()->getConnection();
-
-        // Realiza la consulta SQL directamente
-        $sql = 'SELECT * FROM gaming_essentials.producto ORDER BY RANDOM() LIMIT :limit';
-
-        // Prepara y ejecuta la consulta
-        $stmt = $connection->prepare($sql);
-        $stmt->bindValue('limit', $limit, \PDO::PARAM_INT);
-
-        // Obtén el resultado de la consulta
-        return $stmt->executeQuery()->fetchAllAssociative();
+        return $this->createQueryBuilder('p')
+            ->select('p.id, p.nombre, SUM(lp.cantidad) as total_vendidos')
+            ->join('App\Entity\LineaPedido', 'lp', 'WITH', 'lp.producto = p.id')
+            ->groupBy('p.id')
+            ->orderBy('total_vendidos', 'DESC')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
     }
-
-
-//    public function findRandomProducts(int $limit = 10)
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->orderBy('p.id', 'ASC')  // Ordena por el campo 'id' de forma ascendente
-//            ->setMaxResults($limit)   // Limita el número de resultados a $limit
-//            ->getQuery()
-//            ->getResult();
-//    }
-
-
 
 }
