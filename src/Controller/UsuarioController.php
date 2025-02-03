@@ -8,7 +8,6 @@ use App\Enum\Rol;
 use App\Repository\PerfilRepository;
 use App\Repository\UsuarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +15,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasher;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/usuario')]
 class UsuarioController extends AbstractController
@@ -42,7 +40,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol('ROLE_CLIENTE');
+        $usuario->setRol(1);
 
         $em->persist($usuario);
         $em->flush();
@@ -69,7 +67,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol('ROLE_CLIENTE');
+        $usuario->setRol(1);
 
         $em->persist($usuario);
         $em->flush();
@@ -88,7 +86,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario,$datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol('ROLE_CLIENTE');
+        $usuario->setRol(1);
 
         $em->flush();
 
@@ -153,7 +151,7 @@ class UsuarioController extends AbstractController
 
 
     #[Route('/crearDTO', name: 'usuario_crear', methods: ['POST'])]
-    public function crearDto(Request $request, EntityManagerInterface $em): JsonResponse
+    public function crearDto(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
 
@@ -162,10 +160,9 @@ class UsuarioController extends AbstractController
         // Create new Usuario
         $usuario = new Usuario();
         $usuario->setUsername($datos['username']);
-        $usuario->setPassword($datos['password']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['email']);
-        $usuario->setRol('ROLE_CLIENTE');
-        // Create new Perfil and associate with Usuario
+        $usuario->setRol(Rol::CLIENTE->value);        // Create new Perfil and associate with Usuario
         $perfil = new Perfil();
         $perfil->setNombre($datos['nombre']);
         $perfil->setApellido($datos['apellidos']);
@@ -186,6 +183,8 @@ class UsuarioController extends AbstractController
 
 
 
+
+
     /**
      * ADMINISTRADOR
      */
@@ -201,7 +200,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol('ROLE_ADMIN');
+        $usuario->setRol(0);
 
         $em->persist($usuario);
         $em->flush();
@@ -215,21 +214,17 @@ class UsuarioController extends AbstractController
      *
      */
 
-    #[Route('/gestor/crear', name: 'usuario_crear_gestor', methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/crearGestor', name: 'usuario_crear_gestor', methods: ['POST'])]
     public function crearGestor(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
 
         $datos = json_decode($request->getContent(), true);
 
-
-
-
         $usuario = new Usuario();
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol('ROLE_GESTOR');
+        $usuario->setRol(2);
 
         $em->persist($usuario);
         $em->flush();
@@ -237,63 +232,56 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Gestor creado'], Response::HTTP_CREATED);
     }
 
-    #[Route('/idToken', name: 'id_token', methods: ['GET'])]
-    public function obtenerIdDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
-        $token = $request->headers->get('authorization');
-        if (!$token) {
-            return new JsonResponse(['message' => 'No token provided'], 401);
+    #[Route('/editarGestor/{id}', name: 'usuario_editar_gestor', methods: ['PUT'])]
+    public function editarGestor(int $id, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
+    {
+        $datos = json_decode($request->getContent(), true);
+
+        $usuario = $this->usuarioRepository->find($id);
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        $formatToken = str_replace('Bearer ', '', $token);
-        $finalToken = $jwtManager->parse($formatToken);
-
-        $username = $finalToken['username'] ?? null;
-        if (!$username) {
-            return new JsonResponse(['message' => 'Invalid token'], 403);
+        if ($usuario->getRol() !== Rol::GESTOR->value) {
+            return $this->json(['message' => 'El usuario no es un gestor'], Response::HTTP_BAD_REQUEST);
         }
 
-        $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+        $usuario->setUsername($datos['username']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
+        $usuario->setCorreo($datos['correo']);
 
-        if (!$user) {
-            return new JsonResponse(['message' => 'User not found'], 404);
-        }
+        $em->flush();
 
-        return new JsonResponse(['user_id' => $user->getId()]);
+        return $this->json(['message' => 'Gestor editado correctamente'], Response::HTTP_OK);
     }
 
+    #[Route('/gestores', name: 'usuario_listar_gestores', methods: ['GET'])]
+    public function listarGestores(): JsonResponse
+    {
+        $gestores = $this->usuarioRepository->findBy(['rol' => Rol::GESTOR->value]);
 
-    #[Route('/RolToken', name: 'rol_token', methods: ['GET'])]
-    public function obtenerRolDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
-        $token = $request->headers->get('authorization');
-        if (!$token) {
-            return new JsonResponse(['message' => 'No token provided'], 401);
-        }
-
-        $formatToken = str_replace('Bearer ', '', $token);
-        $finalToken = $jwtManager->parse($formatToken);
-
-        $username = $finalToken['username'] ?? null;
-        if (!$username) {
-            return new JsonResponse(['message' => 'Invalid token'], 403);
-        }
-
-        $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
-
-        if (!$user) {
-            return new JsonResponse(['message' => 'User not found'], 404);
-        }
-
-        return new JsonResponse(['user_rol' => $user->getRol()]);
+        return $this->json($gestores, Response::HTTP_OK);
     }
 
-//    private function convertRoleToString(int $role): string {
-//        $roles = [
-//            0 => 'ADMIN',
-//            1 => 'CLIENTE',
-//            2 => 'GESTOR',
-//        ];
-//
-//        return $roles[$role] ?? 'Unknown';
-//    }
+    #[Route('/eliminarGestor/{id}', name: 'usuario_eliminar_gestor', methods: ['DELETE'])]
+    public function eliminarGestor(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $usuario = $this->usuarioRepository->find($id);
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($usuario->getRol() !== Rol::GESTOR->value) {
+            return $this->json(['message' => 'El usuario no es un gestor'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $em->remove($usuario);
+        $em->flush();
+
+        return $this->json(['message' => 'Gestor eliminado correctamente'], Response::HTTP_OK);
+    }
+
 
 }
