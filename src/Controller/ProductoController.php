@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\ProductoRepository;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/producto')]
@@ -29,7 +30,7 @@ class ProductoController extends AbstractController
         $this->serializer = $serializer;
     }
 
-    #[Route('', name: 'app_producto', methods: ['GET'])]
+    #[Route('/gestor/mostrar', name: 'app_producto', methods: ['GET'])]
     public function index(): Response
     {
         $productos = $this->productoRepository->findAll();
@@ -100,33 +101,20 @@ class ProductoController extends AbstractController
     #[Route('/crear', name: 'app_producto_crear', methods: ['POST'])]
     public function crearProducto(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $nombreImagen = null;
+        $datos = json_decode($request->getContent(), true);
 
-        // Verifica si hay una imagen en la solicitud
-        if ($request->files->has('imagen')) {
-            $archivo = $request->files->get('imagen');
-
-            // Validación del archivo
-            if (!$archivo->isValid() || !in_array($archivo->getMimeType(), ['image/jpeg', 'image/png'])) {
-                return $this->json(['message' => 'El archivo debe ser una imagen válida (JPEG o PNG)'], Response::HTTP_BAD_REQUEST);
-            }
-
-            // Define un nombre único y guarda la imagen
-            $nombreImagen = uniqid('producto_', true) . '.' . $archivo->guessExtension();
-            $directorio = $this->getParameter('directorio_imagenes'); // Defínelo en el archivo config/services.yaml
-            $archivo->move($directorio, $nombreImagen);
+        if (!isset($datos['nombre'], $datos['descripcion'], $datos['precio'], $datos['categoria'], $datos['plataforma'], $datos['imagen'])) {
+            return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
         }
-
-        $datos = $request->request->all();
 
         $producto = new Producto();
         $producto->setNombre($datos['nombre']);
         $producto->setDescripcion($datos['descripcion']);
-        $producto->setDisponibilidad(filter_var($datos['disponibilidad'], FILTER_VALIDATE_BOOLEAN));
+        $producto->setDisponibilidad($datos['disponibilidad'] ?? true);
         $producto->setPlataforma(Plataforma::from($datos['plataforma']));
         $producto->setPrecio(floatval($datos['precio']));
         $producto->setCategoria(Categoria::from($datos['categoria']));
-        $producto->setImagen($nombreImagen); // Guarda el nombre del archivo en la base de datos
+        $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
 
         $em->persist($producto);
         $em->flush();
@@ -134,42 +122,14 @@ class ProductoController extends AbstractController
         return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
     }
 
-    #[Route('/editar/{id}', name: 'app_producto_editar', methods: ['PUT','POST'])]
+
+    #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['POST'])]
     public function editarProducto(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $producto = $this->productoRepository->find($id);
 
         if (!$producto) {
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
-        }
-
-        $datos = $request->query->all() ?: $request->request->all();
-        $archivo = $request->files->get('imagen');
-
-        if (!$datos) {
-            return $this->json(['message' => 'No se recibieron datos válidos'], Response::HTTP_BAD_REQUEST);
-        }
-
-        // Procesar la nueva imagen si existe
-        if ($archivo) {
-            if (!$archivo->isValid() || !in_array($archivo->getMimeType(), ['image/jpeg', 'image/png'])) {
-                return $this->json(['message' => 'El archivo debe ser una imagen válida (JPEG o PNG)'], Response::HTTP_BAD_REQUEST);
-            }
-
-            // Borra la imagen anterior
-            if ($producto->getImagen()) {
-                $directorio = $this->getParameter('directorio_imagenes');
-                $rutaImagenAnterior = $directorio . '/' . $producto->getImagen();
-                if (file_exists($rutaImagenAnterior)) {
-                    unlink($rutaImagenAnterior);
-                }
-            }
-
-            // Guarda la nueva imagen
-            $nombreImagen = uniqid('producto_', true) . '.' . $archivo->guessExtension();
-            $directorio = $this->getParameter('directorio_imagenes');
-            $archivo->move($directorio, $nombreImagen);
-            $producto->setImagen($nombreImagen);
         }
 
         // Actualizar los campos del producto
@@ -190,6 +150,9 @@ class ProductoController extends AbstractController
         }
         if (isset($datos['categoria'])) {
             $producto->setCategoria(Categoria::from($datos['categoria']));
+        }
+        if (isset($datos['imagen'])) {
+            $producto->setImagen($datos['imagen']);
         }
 
         // Persistir y guardar los cambios
@@ -219,4 +182,71 @@ class ProductoController extends AbstractController
 
         return $this->json(['message' => 'Producto eliminado correctamente'], Response::HTTP_OK);
     }
+
+
+    #[Route('/aleatorios', name: 'app_producto_cliente_random' , methods: ['GET'])]
+    public function indexClienteRandom(): Response
+    {
+        $productos = $this->productoRepository->findAvailableProducts();
+
+        // Si hay menos de 10 productos, se devuelven todos
+        $totalProductos = count($productos);
+        if ($totalProductos <= 10) {
+            $productosAleatorios = $productos;
+        } else {
+            $productosAleatorios = [];
+            $indicesSeleccionados = [];
+
+            // Seleccionamos 10 índices aleatorios sin repetición
+            while (count($productosAleatorios) < 10) {
+                $indice = random_int(0, $totalProductos - 1);
+                if (!in_array($indice, $indicesSeleccionados)) {
+                    $indicesSeleccionados[] = $indice;
+                    $productosAleatorios[] = $productos[$indice];
+                }
+            }
+        }
+
+        $jsonContent = $this->serializer->serialize($productosAleatorios, 'json', ['groups' => 'producto']);
+
+        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/masvendidos', name: 'productos_mas_vendidos', methods: ['GET'])]
+    public function productosMasVendidos(ProductoRepository $productoRepository): JsonResponse
+    {
+        $productos = $productoRepository->findTop5MasVendidos();
+
+        return $this->json($productos);
+    }
+
+    #[Route('/gestor/crear', name: 'app_producto_crear_gestor', methods: ['POST'])]
+//    #[IsGranted('ROLE_GESTOR')]
+    public function crearProductoGestor(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $datos = json_decode($request->getContent(), true);
+
+        if (!isset($datos['nombre'], $datos['descripcion'], $datos['precio'], $datos['categoria'], $datos['plataforma'], $datos['imagen'])) {
+            return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $producto = new Producto();
+        $producto->setNombre($datos['nombre']);
+        $producto->setDescripcion($datos['descripcion']);
+        $producto->setDisponibilidad($datos['disponibilidad'] ?? true);
+        $producto->setPlataforma(Plataforma::from($datos['plataforma']));
+        $producto->setPrecio(floatval($datos['precio']));
+        $producto->setCategoria(Categoria::from($datos['categoria']));
+        $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
+
+        $em->persist($producto);
+        $em->flush();
+
+        return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
+    }
+
+
+
+
+
 }

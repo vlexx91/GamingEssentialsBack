@@ -42,7 +42,7 @@ class PerfilController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['email']);
-        $usuario->setRol(Rol::CLIENTE);
+        $usuario->setRol('ROLE_CLIENTE');
 
         $perfil = new Perfil();
         $perfil->setNombre($datos['nombre']);

@@ -16,6 +16,9 @@ use Symfony\Component\Serializer\Attribute\Ignore;
 #[ORM\Entity(repositoryClass: UsuarioRepository::class)]
 class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 {
+
+
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -30,8 +33,8 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 500)]
     private ?string $correo = null;
 
-    #[ORM\Column(type: 'integer')]
-    private ?int $rol = null;
+    #[ORM\Column(length: 100)]
+    private ?string $rol = null;
 
 
 
@@ -85,12 +88,12 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getRol(): ?int
+    public function getRol(): ?string
     {
         return $this->rol;
     }
 
-    public function setRol(int $rol): static
+    public function setRol(string $rol): static
     {
         $this->rol = $rol;
 
@@ -114,4 +117,9 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->username;
     }
+
+    public function isGranted($role){
+        return in_array($role, $this->getRoles());
+    }
+
 }

@@ -6,11 +6,15 @@ use App\Entity\Producto;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+
 /**
  * @extends ServiceEntityRepository<Producto>
  */
 class ProductoRepository extends ServiceEntityRepository
 {
+
+    private $randomFunction;
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Producto::class);
@@ -94,4 +98,17 @@ class ProductoRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findTop5MasVendidos()
+    {
+        return $this->createQueryBuilder('p')
+            ->select('p.id, p.nombre, SUM(lp.cantidad) as total_vendidos')
+            ->join('App\Entity\LineaPedido', 'lp', 'WITH', 'lp.producto = p.id')
+            ->groupBy('p.id')
+            ->orderBy('total_vendidos', 'DESC')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+    }
+
 }
