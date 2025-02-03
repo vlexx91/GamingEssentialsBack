@@ -10,4 +10,5 @@ enum Categoria:int
     case PEGI12=2;
     case PEGI16=3;
     case PEGI18=4;
+    case PERIFERICOS=5;
 }
