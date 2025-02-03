@@ -208,7 +208,7 @@ class ProductoController extends AbstractController
     }
 
     #[Route('/gestor/crear', name: 'app_producto_crear_gestor', methods: ['POST'])]
-//    #[IsGranted('ROLE_GESTOR')]
+    #[IsGranted('ROLE_GESTOR')]
     public function crearProductoGestor(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
@@ -229,7 +229,7 @@ class ProductoController extends AbstractController
         $em->persist($producto);
         $em->flush();
 
-        return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
+        return $this->json(['message' => 'Producto creado correctamente']);
     }
 
 
