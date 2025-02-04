@@ -3,7 +3,7 @@ create table usuario(
 	username varchar(500) not null,
 	password varchar(500) not null,
 	correo varchar(500) not null,
-	rol int not null
+	rol varchar(100) not null
 );
 
 create table perfil(
