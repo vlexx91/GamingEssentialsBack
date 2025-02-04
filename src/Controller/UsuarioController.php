@@ -210,30 +210,6 @@ class UsuarioController extends AbstractController
     }
 
 
-    /**
-     * Crear Gestor teniendo el rol de administrador
-     *
-     */
-
-    #[Route('/gestor/crear', name: 'usuario_crear_gestor', methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
-    public function crearGestor(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
-    {
-
-        $datos = json_decode($request->getContent(), true);
-
-        $usuario = new Usuario();
-        $usuario->setUsername($datos['username']);
-        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
-        $usuario->setCorreo($datos['correo']);
-        $usuario->setRol('ROLE_GESTOR');
-
-        $em->persist($usuario);
-        $em->flush();
-
-        return $this->json(['message' => 'Gestor creado'], Response::HTTP_CREATED);
-    }
-
     #[Route('/idToken', name: 'id_token', methods: ['GET'])]
     public function obtenerIdDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
         $token = $request->headers->get('authorization');
@@ -282,6 +258,30 @@ class UsuarioController extends AbstractController
 
         return new JsonResponse(['user_rol' => $user->getRol()]);
     }
+    /**
+     * Crear Gestor teniendo el rol de administrador
+     *
+     */
+
+    #[Route('/gestor/crear', name: 'usuario_crear_gestor', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function crearGestor(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
+    {
+
+        $datos = json_decode($request->getContent(), true);
+
+        $usuario = new Usuario();
+        $usuario->setUsername($datos['username']);
+        $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
+        $usuario->setCorreo($datos['correo']);
+        $usuario->setRol('ROLE_GESTOR');
+
+        $em->persist($usuario);
+        $em->flush();
+
+        return $this->json(['message' => 'Gestor creado'], Response::HTTP_CREATED);
+    }
+
 
     #[Route('/editarGestor/{id}', name: 'usuario_editar_gestor', methods: ['PUT'])]
     public function editarGestor(int $id, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
