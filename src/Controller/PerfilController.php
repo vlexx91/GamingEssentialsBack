@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\PerfilRepository;
-#[Route('/perfil')]
+#[Route('/api/perfil')]
 class PerfilController extends AbstractController
 {
     private PerfilRepository $perfilRepository;
