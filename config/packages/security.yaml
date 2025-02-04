@@ -4,7 +4,6 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
         app_user_provider:
             entity:
                 class: App\Entity\Usuario
@@ -12,19 +11,20 @@ security:
 
 
     firewalls:
-        main:
-            lazy: true
-            provider: app_user_provider
+        api_login:
+            pattern: ^/api/login
+            stateless: true
             json_login:
                 check_path: /api/login_check
 #                username_path: email
 #                password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
-#            api:
-#                pattern: ^/api/
-#                stateless: true
-#                jwt: ~
+        api:
+            pattern: ^/api/*
+            stateless: true
+            provider: app_user_provider
+            jwt: ~
 
 
                 # activate different ways to authenticate
@@ -39,8 +39,10 @@ security:
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api,       roles: PUBLIC_ACCESS }
-        - { path: ^/api/usuario/, roles: ['ROLE_ADMIN'] }
-        - {path: ^/producto/crear/gestor, roles: ['ROLE_GESTOR']}
+        - { path: ^/api/usuario/, roles: [ROLE_ADMIN] }
+        - { path: ^/api/producto/gestor/test, roles: ROLE_GESTOR }
+        - {path: ^/producto/gestor/crear, roles: ROLE_GESTOR}
+        - {path: ^/api/usuario/gestor/crear, roles: [ROLE_ADMIN]}
 #        - {path: ^/api/login_check, roles: PUBLIC_ACCESS}
 #        - {path: ^/api/usuario, roles: PUBLIC_ACCESS}
 #         - { path: ^/admin, roles: ROLE_ADMIN }
