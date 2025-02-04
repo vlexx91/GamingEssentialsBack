@@ -8,6 +8,4 @@ enum Rol: int
     case CLIENTE=1;
     case GESTOR=2;
 }
-{
 
-}
