@@ -39,10 +39,10 @@ security:
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api,       roles: PUBLIC_ACCESS }
-        - { path: ^/api/usuario/, roles: [ROLE_ADMIN] }
-        - { path: ^/api/producto/gestor/test, roles: ROLE_GESTOR }
-        - {path: ^/producto/gestor/crear, roles: ROLE_GESTOR}
-        - {path: ^/api/usuario/gestor/crear, roles: [ROLE_ADMIN]}
+#        - { path: ^/api/usuario/, roles: [ROLE_ADMIN] }
+#        - { path: ^/api/producto/gestor/test, roles: ROLE_GESTOR }
+#        - {path: ^/producto/gestor/crear, roles: ROLE_GESTOR}
+#        - {path: ^/api/usuario/gestor/crear, roles: [ROLE_ADMIN]}
 #        - {path: ^/api/login_check, roles: PUBLIC_ACCESS}
 #        - {path: ^/api/usuario, roles: PUBLIC_ACCESS}
 #         - { path: ^/admin, roles: ROLE_ADMIN }
