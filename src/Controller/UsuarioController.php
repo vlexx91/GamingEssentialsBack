@@ -13,10 +13,17 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasher;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+require __DIR__ . '/../../vendor/autoload.php';
+
 
 #[Route('/api/usuario')]
 class UsuarioController extends AbstractController
@@ -34,8 +41,12 @@ class UsuarioController extends AbstractController
 
     #[Route('/registro', name: 'app_usuario1', methods: ["POST"])]
     public function registro(Request $request, EntityManagerInterface $em,
-                             UserPasswordHasherInterface $userPasswordHasher,): JsonResponse
+                             UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
+//        $transport = Transport::fromDsn('smtp://gameessentialsteam@gmail.com:fupzrvwiatrfmrke@smtp.gmail.com:587');
+        $transport = Transport::fromDsn($_ENV['MAILER_DSN']);
+        $mailer = new Mailer($transport);
+
         $datos = json_decode($request->getContent(), true);
 
         $usuario = new Usuario();
@@ -44,11 +55,43 @@ class UsuarioController extends AbstractController
         $usuario->setCorreo($datos['correo']);
         $usuario->setRol('ROLE_CLIENTE');
 
+
+        $perfil = new Perfil();
+        $perfil->setNombre($datos['nombre']);
+        $perfil->setApellido($datos['apellido']);
+        $perfil->setDireccion($datos['direccion']);
+        $perfil->setDni($datos['dni']);
+        $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
+        $perfil->setTelefono($datos['telefono']);
+//        $perfil->setEmail($usuario->getCorreo());
+//        $perfil->setUsername($usuario->getUsername());
+//        $perfil->setPassword($usuario->getPassword());
+//        $perfil->setRol($usuario->getRol());
+
+        $perfil->setUsuario($usuario);
+
         $em->persist($usuario);
+        $em->persist($perfil);
         $em->flush();
 
-        return $this->json(['message' => 'Usuario creado'], Response::HTTP_CREATED);
+        // Enviar correo electrónico
+        $email = (new Email())
+            ->from('gameessentialsteam@gmail.com')
+            ->to($usuario->getCorreo())
+            ->subject('Registro exitoso, '.$perfil->getUsuario()->getUsername())
+            ->text('¡Bienvenido!, '. $perfil->getNombre().' '. $perfil->getApellido().
+                ' a nuestra plataforma de videojuegos. ¡Esperamos que disfrutes de una experiencia increíble y te diviertas mucho!');
+
+        try {
+            $mailer->send($email);
+        } catch (\Exception $e) {
+            return $this->json(['message' => 'Usuario creado, pero no se pudo enviar el correo: ' . $e->getMessage()], Response::HTTP_CREATED);
+        }
+
+        return $this->json(['message' => 'Usuario creado y correo enviado'], Response::HTTP_CREATED);
     }
+
+
 
 
 
@@ -333,6 +376,9 @@ class UsuarioController extends AbstractController
 
         return $this->json(['message' => 'Gestor eliminado correctamente'], Response::HTTP_OK);
     }
+
+
+
 
 
 //    private function convertRoleToString(int $role): string {
