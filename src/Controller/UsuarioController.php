@@ -294,7 +294,7 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        if ($usuario->getRol() !== Rol::GESTOR->value) {
+        if ($usuario->getRol() !== 'ROLE_GESTOR') {
             return $this->json(['message' => 'El usuario no es un gestor'], Response::HTTP_BAD_REQUEST);
         }
 
