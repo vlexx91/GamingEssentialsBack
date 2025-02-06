@@ -47,9 +47,9 @@ class LineaPedidoController extends AbstractController
             return $this->json(['message' => 'No hay líneas de pedido asociadas a este producto'], Response::HTTP_OK);
         }
 
-        $jsonData = $serializer->serialize($lineasPedido, 'json', ['groups' => ['linea_pedido']]);
+//        $jsonData = $serializer->serialize($lineasPedido, 'json', ['groups' => ['linea_pedido']]);
 
-        return new JsonResponse($jsonData, Response::HTTP_OK, [], true);
+        return $this->json($lineasPedido, Response::HTTP_OK);
     }
 
 }
