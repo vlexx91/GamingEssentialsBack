@@ -158,8 +158,8 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->username;
     }
 
-//    public function isGranted($role){
-//        return in_array($role, $this->getRoles());
-//    }
+    public function isGranted($role){
+        return in_array($role, $this->getRoles());
+    }
 
 }
