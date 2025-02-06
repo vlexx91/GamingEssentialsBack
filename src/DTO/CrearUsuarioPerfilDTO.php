@@ -4,7 +4,7 @@ namespace App\DTO;
 
 use App\Enum\Rol;
 
-class CrearUsuarioPerfilDTO
+class CrearUsuarioPerfilDTO implements \Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface
 {
     private ?string $nombre= null;
     private ?string $username;
@@ -14,7 +14,8 @@ class CrearUsuarioPerfilDTO
     private ?string $apellidos = null;
     private ?string $email= null;
     private ?string $password= null;
-    private ?int $rol= null;
+    private ?string $telefono = null;
+    private ?string $rol= null;
 
 
     public function getNombre(): ?string
@@ -97,12 +98,22 @@ class CrearUsuarioPerfilDTO
         $this->password = $password;
     }
 
-    public function getRol(): ?int
+    public function getRol(): ?string
     {
         return $this->rol;
     }
 
-    public function setRol(?int $rol): void
+    public function getTelefono(): ?string
+    {
+        return $this->telefono;
+    }
+
+    public function setTelefono(?string $telefono): void
+    {
+        $this->telefono = $telefono;
+    }
+
+    public function setRol(?string $rol): void
     {
         $this->rol = $rol;
     }

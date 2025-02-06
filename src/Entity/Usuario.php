@@ -33,6 +33,15 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 500)]
     private ?string $correo = null;
 
+    #[ORM\Column(length: 900)]
+    private ?string $codigoVerificacion = null;
+
+    #[ORM\Column]
+    private ?bool $verificado = null;
+
+    #[ORM\Column]
+    private ?bool $activo = null;
+
     #[ORM\Column(length: 100)]
     private ?string $rol = null;
 
@@ -87,6 +96,37 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function getCodigoVerificacion(): ?string
+    {
+        return $this->codigoVerificacion;
+    }
+
+    public function setCodigoVerificacion(?string $codigoVerificacion): void
+    {
+        $this->codigoVerificacion = $codigoVerificacion;
+    }
+
+    public function getVerificado(): ?bool
+    {
+        return $this->verificado;
+    }
+
+    public function setVerificado(?bool $verificado): void
+    {
+        $this->verificado = $verificado;
+    }
+
+    public function getActivo(): ?bool
+    {
+        return $this->activo;
+    }
+
+    public function setActivo(?bool $activo): void
+    {
+        $this->activo = $activo;
+    }
+
 
     public function getRol(): ?string
     {
