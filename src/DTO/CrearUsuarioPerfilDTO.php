@@ -14,6 +14,7 @@ class CrearUsuarioPerfilDTO implements \Symfony\Component\Security\Core\User\Pas
     private ?string $apellidos = null;
     private ?string $email= null;
     private ?string $password= null;
+    private ?string $telefono = null;
     private ?string $rol= null;
 
 
@@ -100,6 +101,16 @@ class CrearUsuarioPerfilDTO implements \Symfony\Component\Security\Core\User\Pas
     public function getRol(): ?string
     {
         return $this->rol;
+    }
+
+    public function getTelefono(): ?string
+    {
+        return $this->telefono;
+    }
+
+    public function setTelefono(?string $telefono): void
+    {
+        $this->telefono = $telefono;
     }
 
     public function setRol(?string $rol): void
