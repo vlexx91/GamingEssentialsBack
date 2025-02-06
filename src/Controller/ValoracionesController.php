@@ -32,6 +32,22 @@ class ValoracionesController extends AbstractController
         return $this->json($valoraciones);
     }
 
+    #[Route('/producto/{id}', name: 'valoraciones_por_producto', methods: ['GET'])]
+    public function obtenerValoracionesPorProducto(int $id): JsonResponse
+    {
+        try {
+            $valoraciones = $this->valoracionesRepository->findByProducto($id);
+
+            if (empty($valoraciones)) {
+                return $this->json(['message' => 'Producto no encontrado o sin valoraciones'], Response::HTTP_NOT_FOUND);
+            }
+
+            return $this->json($valoraciones, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return $this->json(['message' => 'Error interno del servidor'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * @param Request $request
      * @param EntityManagerInterface $em

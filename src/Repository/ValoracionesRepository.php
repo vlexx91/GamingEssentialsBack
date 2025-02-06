@@ -47,4 +47,15 @@ class ValoracionesRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    // src/Repository/ValoracionesRepository.php
+
+    public function findByProducto(int $productoId): array
+    {
+        return $this->createQueryBuilder('v')
+            ->andWhere('v.producto = :productoId')
+            ->setParameter('productoId', $productoId)
+            ->getQuery()
+            ->getResult();
+    }
 }
