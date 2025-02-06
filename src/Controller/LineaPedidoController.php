@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/linea_pedido')]
+#[Route('/api/linea_pedido')]
 class LineaPedidoController extends AbstractController
 {
     private LineaPedidoRepository $lineaPedidoRepository;

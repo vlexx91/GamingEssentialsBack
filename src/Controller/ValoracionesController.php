@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/valoraciones')]
+#[Route('/api/valoraciones')]
 class ValoracionesController extends AbstractController
 {
    private ValoracionesRepository $valoracionesRepository;

@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\PerfilRepository;
-#[Route('/perfil')]
+#[Route('/api/perfil')]
 class PerfilController extends AbstractController
 {
     private PerfilRepository $perfilRepository;
@@ -43,7 +43,7 @@ class PerfilController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['email']);
-        $usuario->setRol(Rol::CLIENTE->value);
+        $usuario->setRol('ROLE_CLIENTE');
 
         $perfil = new Perfil();
         $perfil->setNombre($datos['nombre']);
@@ -88,7 +88,7 @@ class PerfilController extends AbstractController
 
         $usuario->setUsername($datos['username']);
         $usuario->setCorreo($datos['email']);
-        $usuario->setRol(Rol::CLIENTE->value);
+        $usuario->setRol('ROLE_CLIENTE');
 
         if (!empty($datos['password'])) {
             $hashedPassword = $passwordHasher->hashPassword($usuario, $datos['password']);

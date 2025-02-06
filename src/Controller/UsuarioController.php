@@ -8,6 +8,7 @@ use App\Enum\Rol;
 use App\Repository\PerfilRepository;
 use App\Repository\UsuarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasher;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/usuario')]
 class UsuarioController extends AbstractController
@@ -40,7 +42,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(1);
+        $usuario->setRol('ROLE_CLIENTE');
 
         $em->persist($usuario);
         $em->flush();
@@ -67,7 +69,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(1);
+        $usuario->setRol('ROLE_CLIENTE');
 
         $em->persist($usuario);
         $em->flush();
@@ -86,7 +88,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario,$datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(1);
+        $usuario->setRol('ROLE_CLIENTE');
 
         $em->flush();
 
@@ -162,7 +164,8 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['email']);
-        $usuario->setRol(Rol::CLIENTE->value);        // Create new Perfil and associate with Usuario
+        $usuario->setRol('ROLE_CLIENTE');
+        // Create new Perfil and associate with Usuario
         $perfil = new Perfil();
         $perfil->setNombre($datos['nombre']);
         $perfil->setApellido($datos['apellidos']);
@@ -183,8 +186,6 @@ class UsuarioController extends AbstractController
 
 
 
-
-
     /**
      * ADMINISTRADOR
      */
@@ -200,7 +201,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(0);
+        $usuario->setRol('ROLE_ADMIN');
 
         $em->persist($usuario);
         $em->flush();
@@ -209,12 +210,61 @@ class UsuarioController extends AbstractController
     }
 
 
+    #[Route('/idToken', name: 'id_token', methods: ['GET'])]
+    public function obtenerIdDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
+        $token = $request->headers->get('authorization');
+        if (!$token) {
+            return new JsonResponse(['message' => 'No token provided'], 401);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+        $finalToken = $jwtManager->parse($formatToken);
+
+        $username = $finalToken['username'] ?? null;
+        if (!$username) {
+            return new JsonResponse(['message' => 'Invalid token'], 403);
+        }
+
+        $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            return new JsonResponse(['message' => 'User not found'], 404);
+        }
+
+        return new JsonResponse(['user_id' => $user->getId()]);
+    }
+
+
+    #[Route('/RolToken', name: 'rol_token', methods: ['GET'])]
+    public function obtenerRolDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
+        $token = $request->headers->get('authorization');
+        if (!$token) {
+            return new JsonResponse(['message' => 'No token provided'], 401);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+        $finalToken = $jwtManager->parse($formatToken);
+
+        $username = $finalToken['username'] ?? null;
+        if (!$username) {
+            return new JsonResponse(['message' => 'Invalid token'], 403);
+        }
+
+        $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            return new JsonResponse(['message' => 'User not found'], 404);
+        }
+
+        return new JsonResponse(['user_rol' => $user->getRol()]);
+    }
     /**
      * Crear Gestor teniendo el rol de administrador
      *
      */
 
-    #[Route('/crearGestor', name: 'usuario_crear_gestor', methods: ['POST'])]
+    #[Route('/gestor/crear', name: 'usuario_crear_gestor', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function crearGestor(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
 
@@ -224,13 +274,14 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(2);
+        $usuario->setRol('ROLE_GESTOR');
 
         $em->persist($usuario);
         $em->flush();
 
         return $this->json(['message' => 'Gestor creado'], Response::HTTP_CREATED);
     }
+
 
     #[Route('/editarGestor/{id}', name: 'usuario_editar_gestor', methods: ['PUT'])]
     public function editarGestor(int $id, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
@@ -283,5 +334,15 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Gestor eliminado correctamente'], Response::HTTP_OK);
     }
 
+
+//    private function convertRoleToString(int $role): string {
+//        $roles = [
+//            0 => 'ADMIN',
+//            1 => 'CLIENTE',
+//            2 => 'GESTOR',
+//        ];
+//
+//        return $roles[$role] ?? 'Unknown';
+//    }
 
 }

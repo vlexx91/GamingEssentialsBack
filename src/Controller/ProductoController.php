@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Producto;
+use App\Entity\Usuario;
 use App\Enum\Plataforma;
 use App\Enum\Categoria;
 use App\Repository\LineaPedidoRepository;
@@ -16,7 +17,7 @@ use App\Repository\ProductoRepository;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/producto')]
+#[Route('/api/producto')]
 class ProductoController extends AbstractController
 {
     private ProductoRepository $productoRepository;
@@ -208,10 +209,13 @@ class ProductoController extends AbstractController
     }
 
     #[Route('/gestor/crear', name: 'app_producto_crear_gestor', methods: ['POST'])]
-//    #[IsGranted('ROLE_GESTOR')]
+    #[IsGranted('ROLE_GESTOR')]
     public function crearProductoGestor(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
+
+        $headers = $request->headers->all();
+
 
         if (!isset($datos['nombre'], $datos['descripcion'], $datos['precio'], $datos['categoria'], $datos['plataforma'], $datos['imagen'])) {
             return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
@@ -229,7 +233,19 @@ class ProductoController extends AbstractController
         $em->persist($producto);
         $em->flush();
 
-        return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
+        return $this->json(['header' => $headers]);
+
+    }
+
+
+    #[Route('/test', name: 'app_producto_test', methods: ['GET'])]
+    public function test(): Response
+    {
+        /** @var Usuario $usuario */
+        $usuario = $this->getUser();
+
+
+        return $this->json(['user' => $usuario]);
     }
 
 
