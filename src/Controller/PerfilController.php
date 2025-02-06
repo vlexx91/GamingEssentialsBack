@@ -11,9 +11,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\PerfilRepository;
-#[Route('/perfil')]
+#[Route('/api/perfil')]
 class PerfilController extends AbstractController
 {
     private PerfilRepository $perfilRepository;
@@ -63,8 +64,14 @@ class PerfilController extends AbstractController
 
 
     #[Route('/editar/{id}', name: 'perfil_editar', methods: ['PUT'])]
-    public function edit(Request $request, EntityManagerInterface $em, Perfil $perfil): JsonResponse
+    public function edit(int $id, Request $request, EntityManagerInterface $em, PerfilRepository $perfilRepository, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
+        $perfil = $perfilRepository->find($id);
+
+        if (!$perfil) {
+            return $this->json(['message' => 'Perfil no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
         $datos = json_decode($request->getContent(), true);
 
         $perfil->setNombre($datos['nombre']);
@@ -74,15 +81,25 @@ class PerfilController extends AbstractController
         $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
 
         $usuario = $perfil->getUsuario();
+
+        if (!$usuario) {
+            return $this->json(['message' => 'El perfil no tiene un usuario asociado'], Response::HTTP_BAD_REQUEST);
+        }
+
         $usuario->setUsername($datos['username']);
-        $usuario->setPassword($datos['password']);
         $usuario->setCorreo($datos['email']);
-        $usuario->setRol(Rol::CLIENTE);
+        $usuario->setRol('ROLE_CLIENTE');
+
+        if (!empty($datos['password'])) {
+            $hashedPassword = $passwordHasher->hashPassword($usuario, $datos['password']);
+            $usuario->setPassword($hashedPassword);
+        }
 
         $em->flush();
 
         return $this->json(['message' => 'Perfil y Usuario actualizados correctamente'], Response::HTTP_OK);
     }
+
 
 
 

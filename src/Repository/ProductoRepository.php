@@ -61,42 +61,38 @@ class ProductoRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    public function findByName(string $name): array
+    public function findByCriteria(array $criterios)
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.nombre LIKE :name')
-            ->setParameter('name', '%' . $name . '%')
-            ->getQuery()
-            ->getResult();
-    }
+        $qb = $this->createQueryBuilder('p')
+            ->andWhere('p.disponibilidad = :val')
+            ->setParameter('val', true);
 
-    public function findByPlatform(string $platform): array
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.plataforma = :platform')
-            ->setParameter('platform', $platform)
-            ->getQuery()
-            ->getResult();
-    }
+        if (!empty($criterios['nombre'])) {
+            $qb->andWhere('LOWER(p.nombre) LIKE LOWER(:nombre)')
+                ->setParameter('nombre', '%' . strtolower($criterios['nombre']) . '%');
+        }
 
-    public function findByCategory(string $category): array
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.categoria = :category')
-            ->setParameter('category', $category)
-            ->getQuery()
-            ->getResult();
-    }
+        if (!empty($criterios['plataforma'])) {
+            $qb->andWhere('p.plataforma = :plataforma')
+                ->setParameter('plataforma', $criterios['plataforma']);
+        }
 
-    public function findByPriceRange(float $minPrice, float $maxPrice): array
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.precio >= :minPrice')
-            ->andWhere('p.precio <= :maxPrice')
-            ->setParameter('minPrice', $minPrice)
-            ->setParameter('maxPrice', $maxPrice)
-            ->getQuery()
-            ->getResult();
+        if (!empty($criterios['categoria'])) {
+            $qb->andWhere('p.categoria = :categoria')
+                ->setParameter('categoria', $criterios['categoria']);
+        }
+
+        if (!empty($criterios['minPrecio'])) {
+            $qb->andWhere('p.precio >= :minPrecio')
+                ->setParameter('minPrecio', $criterios['minPrecio']);
+        }
+
+        if (!empty($criterios['maxPrecio'])) {
+            $qb->andWhere('p.precio <= :maxPrecio')
+                ->setParameter('maxPrecio', $criterios['maxPrecio']);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     public function findTop5MasVendidos()

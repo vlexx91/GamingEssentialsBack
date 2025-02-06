@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Producto;
+use App\Entity\Usuario;
 use App\Enum\Plataforma;
 use App\Enum\Categoria;
 use App\Repository\LineaPedidoRepository;
@@ -16,7 +17,7 @@ use App\Repository\ProductoRepository;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/producto')]
+#[Route('/api/producto')]
 class ProductoController extends AbstractController
 {
     private ProductoRepository $productoRepository;
@@ -62,37 +63,24 @@ class ProductoController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/buscar/nombre/{nombre}', name: 'app_producto_buscar', methods: ['GET'])]
-    public function buscarNombre(string $nombre): Response
+    #[Route('/buscar', name: 'app_producto_buscar', methods: ['GET'])]
+    public function buscar(Request $request): Response
     {
-        $productos = $this->productoRepository->findByName($nombre);
-        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
+        $nombre = $request->query->get('nombre');
+        $plataforma = $request->query->get('plataforma');
+        $categoria = $request->query->get('categoria');
+        $minPrecio = $request->query->get('minPrecio');
+        $maxPrecio = $request->query->get('maxPrecio');
 
-        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
-    }
+        $criterios = array_filter([
+            'nombre' => $nombre,
+            'plataforma' => $plataforma,
+            'categoria' => $categoria,
+            'minPrecio' => $minPrecio,
+            'maxPrecio' => $maxPrecio,
+        ]);
 
-    #[Route('/buscar/plataforma/{platform}', name: 'app_producto_buscar_plataforma', methods: ['GET'])]
-    public function buscarPlataforma(string $platform): Response
-    {
-        $productos = $this->productoRepository->findByPlatform($platform);
-        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
-
-        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
-    }
-
-    #[Route('/buscar/categoria/{category}', name: 'app_producto_buscar_categoria', methods: ['GET'])]
-    public function buscarPorCategoria(string $category): Response
-    {
-        $productos = $this->productoRepository->findByCategory($category);
-        $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
-
-        return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
-    }
-
-    #[Route('/buscar/precio/{minPrice}/{maxPrice}', name: 'app_producto_buscar_precio', methods: ['GET'])]
-    public function buscarPorRangoDePrecio(float $minPrice, float $maxPrice): Response
-    {
-        $productos = $this->productoRepository->findByPriceRange($minPrice, $maxPrice);
+        $productos = $this->productoRepository->findByCriteria($criterios);
         $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
 
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
@@ -123,10 +111,10 @@ class ProductoController extends AbstractController
     }
 
 
-    #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['POST'])]
-    public function editarProducto(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['PUT'])]
+    public function editarProducto( Request $request, EntityManagerInterface $em, Producto $producto): JsonResponse
     {
-        $producto = $this->productoRepository->find($id);
+        $datos = json_decode($request->getContent(), true);
 
         if (!$producto) {
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
@@ -156,7 +144,7 @@ class ProductoController extends AbstractController
         }
 
         // Persistir y guardar los cambios
-        $em->persist($producto);
+//        $em->persist($producto);
         $em->flush();
 
         return $this->json(['message' => 'Producto editado correctamente'], Response::HTTP_OK);
@@ -221,10 +209,13 @@ class ProductoController extends AbstractController
     }
 
     #[Route('/gestor/crear', name: 'app_producto_crear_gestor', methods: ['POST'])]
-//    #[IsGranted('ROLE_GESTOR')]
+    #[IsGranted('ROLE_GESTOR')]
     public function crearProductoGestor(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
+
+        $headers = $request->headers->all();
+
 
         if (!isset($datos['nombre'], $datos['descripcion'], $datos['precio'], $datos['categoria'], $datos['plataforma'], $datos['imagen'])) {
             return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
@@ -242,7 +233,19 @@ class ProductoController extends AbstractController
         $em->persist($producto);
         $em->flush();
 
-        return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
+        return $this->json(['header' => $headers]);
+
+    }
+
+
+    #[Route('/test', name: 'app_producto_test', methods: ['GET'])]
+    public function test(): Response
+    {
+        /** @var Usuario $usuario */
+        $usuario = $this->getUser();
+
+
+        return $this->json(['user' => $usuario]);
     }
 
 

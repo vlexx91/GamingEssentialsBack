@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/pedido')]
+#[Route('/api/pedido')]
 class PedidoController extends AbstractController
 {
     private PedidoRepository $pedidoRepository;
