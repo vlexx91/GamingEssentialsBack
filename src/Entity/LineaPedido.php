@@ -29,12 +29,10 @@ class LineaPedido
 
     #[ORM\ManyToOne(targetEntity: Producto::class, inversedBy: 'lineaPedidos')]
     #[ORM\JoinColumn(name:'id_producto',nullable: false,onDelete: 'NULL')]
-    #[Ignore]
     private ?Producto $producto = null;
 
     #[ORM\ManyToOne(targetEntity: Pedido::class, inversedBy: 'lineaPedidos',cascade: ['remove'])]
     #[ORM\JoinColumn(name:'id_pedido',referencedColumnName: 'id',nullable: false)]
-    #[Ignore]
     private ?Pedido $pedido = null;
 
     public function getId(): ?int
