@@ -42,7 +42,7 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
-        $usuario->setRol(1);
+        $usuario->setRol('ROLE_CLIENTE');
 
         $em->persist($usuario);
         $em->flush();
