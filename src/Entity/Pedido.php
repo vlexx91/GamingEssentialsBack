@@ -39,6 +39,7 @@ class Pedido
     #[Ignore]  // Evita la serialización de la relación circular
     private ?Perfil $perfil = null;
 
+    #[ignore]
     #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'pedido', cascade: ['remove'], orphanRemoval: true,fetch: "EAGER")]
     #[Groups(['pedido:read'])]
     private Collection $lineaPedidos;
