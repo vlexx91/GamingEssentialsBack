@@ -3,7 +3,10 @@ create table usuario(
 	username varchar(500) not null,
 	password varchar(500) not null,
 	correo varchar(500) not null,
-	rol int not null
+    verificado boolean not null,
+    codigo_verificacion varchar(1000),
+    activo boolean not null,
+	rol varchar(100) not null
 );
 
 create table perfil(
@@ -13,7 +16,8 @@ create table perfil(
 	direccion varchar(750) not null,
 	dni char(9) not null,
 	fecha_nacimiento timeStamp(6) not null,
-    telefono varchar(100) not null,
+    telefono varchar(50) not null,
+    imagen varchar(900) not null,
 	id_usuario int not null,
     constraint fk_perfil_usuario foreign key (id_usuario) references usuario(id)
 );
@@ -34,6 +38,7 @@ create table valoraciones(
 	id serial primary key not null,
 	estrellas int not null,
 	comentario varchar(2000),
+    activado boolean not null,
 	id_usuario int not null,
 	id_producto int not null,
     constraint fk_valoraciones_usuario foreign key (id_usuario) references usuario(id),
