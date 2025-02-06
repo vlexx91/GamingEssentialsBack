@@ -52,6 +52,34 @@ class PedidoController extends AbstractController
         return $this->json($pedido);
     }
 
+    #[Route('/perfilpedido', name: 'pedidos_por_usuario', methods: ['GET'])]
+    public function pedidosPorUsuario(): JsonResponse
+    {
+        // Obtener el usuario autenticado desde el token
+        $usuario = $this->security->getUser();
+
+
+        if (!$usuario) {
+            return new JsonResponse(['message' => 'Usuario no autenticado'], 401);
+        }
+
+        // Buscar el perfil asociado al usuario
+        $perfil = $this->perfilRepository->findOneBy(['usuario' => $usuario]);
+
+        if (!$perfil || !$perfil->getId()) {
+            return new JsonResponse(['message' => 'No se encontró un perfil válido para este usuario'], 404);
+        }
+
+        // Buscar los pedidos asociados a ese perfil usando findByPerfil
+        $pedidos = $this->pedidoRepository->findByPerfil($perfil);
+
+        if (empty($pedidos)) {
+            return new JsonResponse(['message' => 'No se encontraron pedidos para este perfil'], 404);
+        }
+
+        return $this->json($pedidos);
+    }
+
     #[Route('/{id}', name: 'app_pedido_findById', methods: ['GET'])]
     public function findById(string $id): JsonResponse
     {
@@ -65,6 +93,8 @@ class PedidoController extends AbstractController
 
         return $this->json($pedido);
     }
+
+
 
     #[Route('/crearPorDTO', name: 'crear_pedido', methods: ['POST'])]
     public function crear(Request $request, SerializerInterface $serializer): JsonResponse
@@ -243,31 +273,5 @@ class PedidoController extends AbstractController
         ], JsonResponse::HTTP_CREATED);
     }
 
-    #[Route('/perfilpedido', name: 'pedidos_por_usuario_maricon', methods: ['GET'])]
-    public function pedidosPorUsuario(): JsonResponse
-    {
-        // Obtener el usuario autenticado desde el token
-        $usuario = $this->security->getUser();
 
-        if (!$usuario) {
-            return new JsonResponse(['message' => 'Usuario no autenticado'], 401);
-        }
-
-        // Buscar el perfil asociado al usuario
-        $perfil = $this->perfilRepository->findOneBy(['usuario' => $usuario]);
-
-
-        if (!$perfil || !$perfil->getId()) {
-            return new JsonResponse(['message' => 'No se encontró un perfil válido para este usuario'], 404);
-        }
-
-        // Buscar los pedidos asociados a ese perfil
-        $pedidos = $this->pedidoRepository->findBy(['perfil' => $perfil]);
-
-        if (empty($pedidos)) {
-            return new JsonResponse(['message' => 'No se encontraron pedidos para este perfil'], 404);
-        }
-
-        return new JsonResponse($pedidos, 200);
-    }
 }
