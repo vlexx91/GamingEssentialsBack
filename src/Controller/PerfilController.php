@@ -51,6 +51,7 @@ class PerfilController extends AbstractController
         $perfil->setDireccion($datos['direccion']);
         $perfil->setDni($datos['dni']);
         $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
+        $perfil->setTelefono($datos['telefono']);
 
         $perfil->setUsuario($usuario);
 
@@ -79,6 +80,7 @@ class PerfilController extends AbstractController
         $perfil->setDireccion($datos['direccion']);
         $perfil->setDni($datos['dni']);
         $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
+        $perfil->setTelefono($datos['telefono']);
 
         $usuario = $perfil->getUsuario();
 
