@@ -74,4 +74,29 @@ class CarritoController extends AbstractController
         $session->remove('cart');
         return $this->json(['message' => 'Carrito vaciado']);
     }
+
+    #[Route('/update', methods: ['POST'])]
+    public function updateCart(Request $request, SessionInterface $session): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $productId = $data['productId'];
+        $quantity = $data['quantity'];
+
+        $cart = $session->get('cart', []);
+
+        if (!isset($cart[$productId])) {
+            return $this->json(['message' => 'Producto no encontrado en el carrito'], 404);
+        }
+
+        // Evita cantidades negativas o cero
+        if ($quantity > 0) {
+            $cart[$productId]['quantity'] = $quantity;
+        } else {
+            unset($cart[$productId]); // Si la cantidad es 0, se elimina el producto
+        }
+
+        $session->set('cart', $cart);
+
+        return $this->json(['message' => 'Cantidad actualizada', 'cart' => $cart]);
+    }
 }
