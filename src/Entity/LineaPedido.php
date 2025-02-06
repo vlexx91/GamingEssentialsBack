@@ -85,7 +85,7 @@ class LineaPedido
 
     public function setPedido(?Pedido $pedido): static
     {
-        $this->Pedido = $pedido;
+        $this->pedido = $pedido;
 
         return $this;
     }
