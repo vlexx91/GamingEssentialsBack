@@ -99,7 +99,7 @@ class UsuarioController extends AbstractController
     public function verificarCodigo(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
-        $usuario = $em->getRepository(Usuario::class)->findOneBy(['correo' => $datos['correo']]);
+        $usuario = $em->getRepository(Usuario::class)->findOneBy(['username' => $datos['username']]);
 
         if (!$usuario || $usuario->getCodigoVerificacion() !== $datos['codigo']) {
             return $this->json(['message' => 'Código incorrecto o usuario no encontrado'], Response::HTTP_BAD_REQUEST);
