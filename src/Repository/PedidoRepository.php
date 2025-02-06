@@ -48,4 +48,14 @@ class PedidoRepository extends ServiceEntityRepository
             ->getResult();
 
     }
+    public function findByPerfil($perfil): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.perfil = :perfil')
+            ->setParameter('perfil', $perfil)
+            ->orderBy('p.fecha', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
 }
