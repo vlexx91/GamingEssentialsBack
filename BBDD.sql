@@ -16,7 +16,7 @@ create table perfil(
 	direccion varchar(750) not null,
 	dni char(9) not null,
 	fecha_nacimiento timeStamp(6) not null,
-    telefono varchar(50) not null,
+    telefono varchar(9) not null,
     imagen varchar(900) not null,
 	id_usuario int not null,
     constraint fk_perfil_usuario foreign key (id_usuario) references usuario(id)
