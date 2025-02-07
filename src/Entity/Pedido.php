@@ -36,7 +36,7 @@ class Pedido
 
     #[ORM\ManyToOne(targetEntity: Perfil::class, inversedBy: 'pedidos')]
     #[ORM\JoinColumn(name: 'id_perfil', referencedColumnName: 'id', onDelete: 'CASCADE', nullable: false)] // Cambia nullable según tus necesidades
-    #[Ignore]  // Evita la serialización de la relación circular
+//    #[ignore]
     private ?Perfil $perfil = null;
 
     #[ignore]
