@@ -40,18 +40,6 @@ class PedidoController extends AbstractController
         return $this->json($pedido);
     }
 
-    #[Route('/{id}', name: 'app_pedido_findById', methods: ['GET'])]
-    public function findById(int $id): JsonResponse
-    {
-        $pedido = $this->pedidoRepository->find($id);
-
-        if (!$pedido) {
-            return $this->json(['error' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
-        }
-
-        return $this->json($pedido);
-    }
-
     #[Route('/crear', name: 'crear_pedido', methods: ['POST'])]
     public function crear(Request $request, SerializerInterface $serializer): JsonResponse
     {
@@ -142,9 +130,37 @@ class PedidoController extends AbstractController
         }
 
         // Serializar los pedidos con los grupos
-        $data = $serializer->normalize($pedidos, null, ['groups' => ['pedido:read']]);
-
+        $data = [];
+        foreach ($pedidos as $pedido) {
+            $data[] = [
+                'id' => $pedido->getId(),
+                'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
+                'estado' => $pedido->getEstado(),
+                'pagoTotal' => $pedido->getPagoTotal(),
+                'perfil' => [
+                    'id' => $pedido->getPerfil()->getId(),
+                    'nombre' => $pedido->getPerfil()->getNombre(),
+                    'apellido' => $pedido->getPerfil()->getApellido(),
+                    'direccion'=> $pedido->getPerfil()->getDireccion(),
+                    'dni'=>$pedido->getPerfil()->getDni(),
+                    'telefono'=>$pedido->getPerfil()->getTelefono(),
+                    'fecha_nacimiento'=>$pedido->getPerfil()->getFechaNacimiento()
+                ],
+            ];
+        }
         // Devolver los pedidos en formato JSON
         return $this->json($data);
+    }
+
+    #[Route('/{id}', name: 'app_pedido_findById', methods: ['GET'])]
+    public function findById(int $id): JsonResponse
+    {
+        $pedido = $this->pedidoRepository->find($id);
+
+        if (!$pedido) {
+            return $this->json(['error' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json($pedido);
     }
 }

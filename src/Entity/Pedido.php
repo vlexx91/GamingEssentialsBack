@@ -71,7 +71,7 @@ class Pedido
         return $this;
     }
 
-    public function isEstado(): ?bool
+    public function getEstado(): ?bool
     {
         return $this->estado;
     }
