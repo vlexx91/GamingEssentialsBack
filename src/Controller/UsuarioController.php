@@ -9,33 +9,42 @@ use App\Repository\PerfilRepository;
 use App\Repository\UsuarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasher;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+require __DIR__ . '/../../vendor/autoload.php';
+
+
 #[Route('/api/usuario')]
 class UsuarioController extends AbstractController
 {
     private UsuarioRepository $usuarioRepository;
-    private PerfilRepository $perfilRepository;
 
-    public function __construct(UsuarioRepository $usuarioRepository, PerfilRepository $perfilRepository)
+    public function __construct(UsuarioRepository $usuarioRepository)
     {
         $this->usuarioRepository = $usuarioRepository;
-        $this->perfilRepository =$perfilRepository;
-
     }
 
 
     #[Route('/registro', name: 'app_usuario1', methods: ["POST"])]
     public function registro(Request $request, EntityManagerInterface $em,
-                             UserPasswordHasherInterface $userPasswordHasher,): JsonResponse
+                             UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
+//        $transport = Transport::fromDsn('smtp://gameessentialsteam@gmail.com:fupzrvwiatrfmrke@smtp.gmail.com:587');
+        $transport = Transport::fromDsn($_ENV['MAILER_DSN']);
+        $mailer = new Mailer($transport);
+
         $datos = json_decode($request->getContent(), true);
 
         $usuario = new Usuario();
@@ -44,11 +53,66 @@ class UsuarioController extends AbstractController
         $usuario->setCorreo($datos['correo']);
         $usuario->setRol('ROLE_CLIENTE');
 
+
+        $perfil = new Perfil();
+        $perfil->setNombre($datos['nombre']);
+        $perfil->setApellido($datos['apellido']);
+        $perfil->setDireccion($datos['direccion']);
+        $perfil->setDni($datos['dni']);
+        $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
+        $perfil->setTelefono($datos['telefono']);
+
+        $perfil->setUsuario($usuario);
+
+        $codigoVerificacion = Uuid::uuid4()->toString(); // Genera un código único
+        $usuario->setCodigoVerificacion($codigoVerificacion); // Guardar en la BD
+        $usuario->setActivo(true); // Marcar usuario como inactivo hasta que verifique
+        $usuario->setVerificado(false); // Marcar usuario como no verificado
+
         $em->persist($usuario);
+        $em->persist($perfil);
         $em->flush();
 
-        return $this->json(['message' => 'Usuario creado'], Response::HTTP_CREATED);
+
+        $em->persist($usuario);
+        $em->persist($perfil);
+        $em->flush();
+
+        // Enviar correo electrónico
+        $email = (new Email())
+            ->from('gameessentialsteam@gmail.com')
+            ->to($usuario->getCorreo())
+            ->subject('Registro exitoso, '.$perfil->getUsuario()->getUsername())
+            ->text('¡Bienvenido!, '. $perfil->getNombre().' '. $perfil->getApellido().
+                ' a nuestra plataforma de videojuegos. ¡Esperamos que disfrutes de una experiencia increíble y te diviertas mucho!, se te ha mandado un codigo de verificacion: '.$usuario->getCodigoVerificacion());
+
+        try {
+            $mailer->send($email);
+        } catch (\Exception $e) {
+            return $this->json(['message' => 'Usuario creado, pero no se pudo enviar el correo: ' . $e->getMessage()], Response::HTTP_CREATED);
+        }
+
+        return $this->json(['message' => 'Usuario creado y correo enviado'], Response::HTTP_CREATED);
     }
+
+    #[Route('/verificar', name: 'verificar_usuario', methods: ["POST"])]
+    public function verificarCodigo(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $datos = json_decode($request->getContent(), true);
+        $usuario = $em->getRepository(Usuario::class)->findOneBy(['username' => $datos['username']]);
+
+        if (!$usuario || $usuario->getCodigoVerificacion() !== $datos['codigo']) {
+            return $this->json(['message' => 'Código incorrecto o usuario no encontrado'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $usuario->setVerificado(true);
+        $usuario->setCodigoVerificacion(null); // Limpia el código después de la verificación
+        $em->flush();
+
+        return $this->json(['message' => 'Usuario verificado exitosamente'], Response::HTTP_OK);
+    }
+
+
 
 
 
@@ -129,6 +193,7 @@ class UsuarioController extends AbstractController
             $perfilCrearDTO->setDireccion($perfil->getDireccion());
             $perfilCrearDTO->setDni($perfil->getDni());
             $perfilCrearDTO->setFechaNacimiento($perfil->getFechaNacimiento());
+            $perfilCrearDTO->setTelefono($perfil->getTelefono());
             $perfilCrearDTO->setEmail($perfil->getUsuario()->getCorreo());
             $perfilCrearDTO->setUsername($perfil->getUsuario()->getUsername());
             $perfilCrearDTO->setPassword($perfil->getUsuario()->getPassword());
@@ -151,7 +216,6 @@ class UsuarioController extends AbstractController
      */
 
 
-
     #[Route('/crearDTO', name: 'usuario_crear', methods: ['POST'])]
     public function crearDto(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
@@ -172,6 +236,7 @@ class UsuarioController extends AbstractController
         $perfil->setDireccion($datos['direccion']);
         $perfil->setDni($datos['dni']);
         $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
+        $perfil->setTelefono($datos['telefono']);
 
         $perfil->setUsuario($usuario);
 
@@ -338,7 +403,7 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        if ($usuario->getRol() !== Rol::GESTOR->value) {
+        if ($usuario->getRol() !== 'ROLE_GESTOR') {
             return $this->json(['message' => 'El usuario no es un gestor'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -354,7 +419,7 @@ class UsuarioController extends AbstractController
     #[Route('/gestores', name: 'usuario_listar_gestores', methods: ['GET'])]
     public function listarGestores(): JsonResponse
     {
-        $gestores = $this->usuarioRepository->findBy(['rol' => Rol::GESTOR->value]);
+        $gestores = $this->usuarioRepository->findBy(['rol' => 'ROLE_GESTOR']);
 
         return $this->json($gestores, Response::HTTP_OK);
     }
@@ -368,7 +433,7 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        if ($usuario->getRol() !== Rol::GESTOR->value) {
+        if ($usuario->getRol() !== 'ROLE_GESTOR') {
             return $this->json(['message' => 'El usuario no es un gestor'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -378,15 +443,5 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Gestor eliminado correctamente'], Response::HTTP_OK);
     }
 
-
-//    private function convertRoleToString(int $role): string {
-//        $roles = [
-//            0 => 'ADMIN',
-//            1 => 'CLIENTE',
-//            2 => 'GESTOR',
-//        ];
-//
-//        return $roles[$role] ?? 'Unknown';
-//    }
 
 }

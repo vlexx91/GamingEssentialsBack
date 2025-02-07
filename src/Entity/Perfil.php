@@ -31,9 +31,16 @@ class Perfil
     #[ORM\Column(length: 9)]
     private ?string $dni = null;
 
+    #[ORM\Column(length: 100)]
+    private ?string $telefono = null;
+
+
+
     #[Ignore]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fecha_nacimiento = null;
+
+
 
     #[Ignore]
     #[ORM\OneToOne(targetEntity: Usuario::class, cascade: ["remove"])]
@@ -138,6 +145,16 @@ class Perfil
         return $this->usuario;
     }
 
+    public function getTelefono(): ?string
+    {
+        return $this->telefono;
+    }
+
+    public function setTelefono(?string $telefono): void
+    {
+        $this->telefono = $telefono;
+    }
+
     // Cambiado de int a ?Usuario
     public function setUsuario(?Usuario $usuario): static
     {
@@ -145,4 +162,6 @@ class Perfil
 
         return $this;
     }
+
+
 }
