@@ -32,20 +32,17 @@ class ValoracionesController extends AbstractController
         return $this->json($valoraciones);
     }
 
-    #[Route('/producto/{id}', name: 'valoraciones_por_producto', methods: ['GET'])]
-    public function obtenerValoracionesPorProducto(int $id): JsonResponse
+    #[Route('/producto/{id}/activadas', name: 'valoraciones_activadas_por_producto', methods: ['GET'])]
+    public function obtenerValoracionesActivadasPorProducto(int $id): JsonResponse
     {
-        try {
             $valoraciones = $this->valoracionesRepository->findByProducto($id);
 
             if (empty($valoraciones)) {
-                return $this->json(['message' => 'Producto no encontrado o sin valoraciones'], Response::HTTP_NOT_FOUND);
+                return $this->json(['message' => 'Producto no encontrado o sin valoraciones activadas'], Response::HTTP_NOT_FOUND);
             }
 
             return $this->json($valoraciones, Response::HTTP_OK);
-        } catch (\Exception $e) {
-            return $this->json(['message' => 'Error interno del servidor'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+
     }
 
     /**
@@ -73,6 +70,7 @@ class ValoracionesController extends AbstractController
         $valoracion = new Valoraciones();
         $valoracion->setEstrellas($datos['estrellas']);
         $valoracion->setComentario($datos['comentario']);
+        $valoracion->setActivado(true);
         $valoracion->setUsuario($usuario);
         $valoracion->setProducto($producto);
 
@@ -118,7 +116,7 @@ class ValoracionesController extends AbstractController
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        $valoraciones = $em->getRepository(Valoraciones::class)->findBy(['producto' => $producto]);
+        $valoraciones = $em->getRepository(Valoraciones::class)->findBy(['producto' => $producto, 'activado' => true]);
 
         if (count($valoraciones) === 0) {
             return $this->json(['message' => 'No hay valoraciones disponibles para este producto'], Response::HTTP_NOT_FOUND);
