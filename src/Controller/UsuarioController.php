@@ -423,6 +423,7 @@ class UsuarioController extends AbstractController
                 'telefono' => $perfil->getTelefono(),
                 'username' => $perfil->getUsuario()->getUsername(),
                 'correo' => $perfil->getUsuario()->getCorreo(),
+                'userId' => $perfil->getUsuario()->getId(),
             ];
         }
 
