@@ -553,4 +553,22 @@ class UsuarioController extends AbstractController
 
         return $this->json($result, Response::HTTP_OK);
     }
+    #[Route('/perfil/{id}/usuario', name: 'obtener_usuario_por_perfil', methods: ['GET'])]
+    public function obtenerUsuarioPorPerfil(int $id, PerfilRepository $perfilRepository): JsonResponse
+    {
+        $perfil = $perfilRepository->find($id);
+
+        if (!$perfil) {
+            return $this->json(['message' => 'Perfil no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        $usuario = $perfil->getUsuario();
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json(['usuarioId' => $usuario->getId()], Response::HTTP_OK);
+    }
+
 }
