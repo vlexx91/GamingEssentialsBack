@@ -2,9 +2,12 @@
 
 namespace App\Controller;
 use App\DTO\CrearUsuarioPerfilDTO;
+use App\Entity\LineaPedido;
+use App\Entity\Pedido;
 use App\Entity\Perfil;
 use App\Entity\Usuario;
 use App\Enum\Rol;
+use App\Repository\PedidoRepository;
 use App\Repository\PerfilRepository;
 use App\Repository\UsuarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -323,8 +326,10 @@ class UsuarioController extends AbstractController
 
         return new JsonResponse(['user_rol' => $user->getRol()]);
     }
+
+
     /**
-     * Crear Gestor teniendo el rol de administrador
+     * APARTADO GESTOR
      *
      */
 
@@ -400,4 +405,152 @@ class UsuarioController extends AbstractController
     }
 
 
+
+    #[Route('/gestor/perfiles', name: 'listar_perfiles', methods: ['GET'])]
+    public function listarPerfiles(PerfilRepository $perfilRepository): JsonResponse
+    {
+        $perfiles = $perfilRepository->findAll();
+        $result = [];
+
+        foreach ($perfiles as $perfil) {
+            $result[] = [
+                'id' => $perfil->getId(),
+                'nombre' => $perfil->getNombre(),
+                'apellido' => $perfil->getApellido(),
+                'direccion' => $perfil->getDireccion(),
+                'dni' => $perfil->getDni(),
+                'fecha_nacimiento' => $perfil->getFechaNacimiento()->format('Y-m-d'),
+                'telefono' => $perfil->getTelefono(),
+                'username' => $perfil->getUsuario()->getUsername(),
+                'correo' => $perfil->getUsuario()->getCorreo(),
+            ];
+        }
+
+        return $this->json($result, Response::HTTP_OK);
+    }
+
+    #[Route('/gestor/perfiles/{id}', name: 'listar_perfil_por_id', methods: ['GET'])]
+    public function listarPerfilPorId(int $id, PerfilRepository $perfilRepository): JsonResponse
+    {
+        $perfil = $perfilRepository->find($id);
+
+        if (!$perfil) {
+            return $this->json(['message' => 'Perfil no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        $result = [
+            'id' => $perfil->getId(),
+            'nombre' => $perfil->getNombre(),
+            'apellido' => $perfil->getApellido(),
+            'direccion' => $perfil->getDireccion(),
+            'dni' => $perfil->getDni(),
+            'fecha_nacimiento' => $perfil->getFechaNacimiento()->format('Y-m-d'),
+            'telefono' => $perfil->getTelefono(),
+            'username' => $perfil->getUsuario()->getUsername(),
+            'correo' => $perfil->getUsuario()->getCorreo(),
+        ];
+
+        return $this->json($result, Response::HTTP_OK);
+    }
+
+    #[Route('/gestor/perfiles/lineaPedido', name: 'listar_perfiles_con_lineas', methods: ['GET'])]
+    public function listarPerfilesConLineas(PerfilRepository $perfilRepository, PedidoRepository $pedidoRepository): JsonResponse
+    {
+        $perfiles = $perfilRepository->findAll();
+        $result = [];
+
+        foreach ($perfiles as $perfil) {
+            $pedidos = $pedidoRepository->findBy(['perfil' => $perfil]);
+            $pedidosConLineas = [];
+
+            foreach ($pedidos as $pedido) {
+                $lineasPedido = $pedido->getLineaPedidos();
+                $lineas = [];
+
+                foreach ($lineasPedido as $lineaPedido) {
+                    $lineas[] = [
+                        'id' => $lineaPedido->getId(),
+                        'cantidad' => $lineaPedido->getCantidad(),
+                        'precio' => $lineaPedido->getPrecio(),
+                        'producto' => $lineaPedido->getProducto()->getNombre(),
+
+                    ];
+                }
+
+                $pedidosConLineas[] = [
+                    'id' => $pedido->getId(),
+                    'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
+                    'pago_total' => $pedido->getPagoTotal(),
+                    'estado' => $pedido->getEstado(),
+                    'lineas_pedido' => $lineas,
+                ];
+            }
+
+            $result[] = [
+                'perfil' => [
+                    'id' => $perfil->getId(),
+                    'nombre' => $perfil->getNombre(),
+                    'apellido' => $perfil->getApellido(),
+                    'direccion' => $perfil->getDireccion(),
+                    'dni' => $perfil->getDni(),
+                    'fecha_nacimiento' => $perfil->getFechaNacimiento()->format('Y-m-d'),
+                    'telefono' => $perfil->getTelefono(),
+                    'usuario' => $perfil->getUsuario()->getUsername(),
+                ],
+                'pedidos' => $pedidosConLineas,
+            ];
+        }
+
+        return $this->json($result, Response::HTTP_OK);
+    }
+
+    #[Route('/gestor/perfiles/lineaPedido/{userId}', name: 'listar_perfiles_con_lineas_por_usuario', methods: ['GET'])]
+    public function listarPerfilesConLineasPorUsuario(int $userId, PerfilRepository $perfilRepository, PedidoRepository $pedidoRepository): JsonResponse
+    {
+        $perfiles = $perfilRepository->findBy(['usuario' => $userId]);
+        $result = [];
+
+        foreach ($perfiles as $perfil) {
+            $pedidos = $pedidoRepository->findBy(['perfil' => $perfil]);
+            $pedidosConLineas = [];
+
+            foreach ($pedidos as $pedido) {
+                $lineasPedido = $pedido->getLineaPedidos();
+                $lineas = [];
+
+                foreach ($lineasPedido as $lineaPedido) {
+                    $lineas[] = [
+                        'id' => $lineaPedido->getId(),
+                        'cantidad' => $lineaPedido->getCantidad(),
+                        'precio' => $lineaPedido->getPrecio(),
+                        'producto' => $lineaPedido->getProducto()->getNombre(),
+                    ];
+                }
+
+                $pedidosConLineas[] = [
+                    'id' => $pedido->getId(),
+                    'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
+                    'pago_total' => $pedido->getPagoTotal(),
+                    'estado' => $pedido->getEstado(),
+                    'lineas_pedido' => $lineas,
+                ];
+            }
+
+            $result[] = [
+                'perfil' => [
+                    'id' => $perfil->getId(),
+                    'nombre' => $perfil->getNombre(),
+                    'apellido' => $perfil->getApellido(),
+                    'direccion' => $perfil->getDireccion(),
+                    'dni' => $perfil->getDni(),
+                    'fecha_nacimiento' => $perfil->getFechaNacimiento()->format('Y-m-d'),
+                    'telefono' => $perfil->getTelefono(),
+                    'usuario' => $perfil->getUsuario()->getUsername(),
+                ],
+                'pedidos' => $pedidosConLineas,
+            ];
+        }
+
+        return $this->json($result, Response::HTTP_OK);
+    }
 }
