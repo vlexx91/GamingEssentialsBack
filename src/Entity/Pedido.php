@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use phpDocumentor\Reflection\TypeResolver;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Ignore;
 
 #[ORM\Table(name: 'Pedido', schema: 'gaming_essentials')]
 #[ORM\Entity(repositoryClass: PedidoRepository::class)]
@@ -17,19 +18,15 @@ class Pedido
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['pedido:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    #[Groups(['pedido:read'])]
     private ?DateTimeInterface $fecha = null;
 
     #[ORM\Column]
-    #[Groups(['pedido:read'])]
     private ?bool $estado = null;
 
     #[ORM\Column(name:"pago_total" )]
-    #[Groups(['pedido:read'])]
     private ?float $pagoTotal = null;
 
 
@@ -37,8 +34,8 @@ class Pedido
     #[ORM\JoinColumn(name: 'id_perfil', referencedColumnName: 'id', onDelete: 'CASCADE', nullable: false)] // Cambia nullable según tus necesidades
     private ?Perfil $perfil = null;
 
+//    #[Ignore]
     #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'pedido', cascade: ['remove'], orphanRemoval: true,fetch: "EAGER")]
-    #[Groups(['pedido:read'])]
     private Collection $lineaPedidos;
 
     public function getLineaPedidos(): Collection
