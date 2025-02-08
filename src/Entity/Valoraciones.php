@@ -22,6 +22,9 @@ class Valoraciones
     #[ORM\Column(length: 2000, nullable: true)]
     private ?string $comentario = null;
 
+    #[ORM\Column]
+    private ?bool $activado = null;
+
 //    #[Groups('valoraciones')]
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name: "id_usuario",nullable: false)]
@@ -86,5 +89,15 @@ class Valoraciones
         $this->producto = $producto;
 
         return $this;
+    }
+
+    public function getActivado(): ?bool
+    {
+        return $this->activado;
+    }
+
+    public function setActivado(?bool $activado): void
+    {
+        $this->activado = $activado;
     }
 }

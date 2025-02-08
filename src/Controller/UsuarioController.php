@@ -102,7 +102,7 @@ class UsuarioController extends AbstractController
     public function verificarCodigo(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
-        $usuario = $em->getRepository(Usuario::class)->findOneBy(['username' => $datos['username    ']]);
+        $usuario = $em->getRepository(Usuario::class)->findOneBy(['username' => $datos['username']]);
 
         if (!$usuario || $usuario->getCodigoVerificacion() !== $datos['codigo']) {
             return $this->json(['message' => 'Código incorrecto o usuario no encontrado'], Response::HTTP_BAD_REQUEST);
@@ -326,10 +326,8 @@ class UsuarioController extends AbstractController
 
         return new JsonResponse(['user_rol' => $user->getRol()]);
     }
-
-
     /**
-     * APARTADO GESTOR
+     * Crear Gestor teniendo el rol de administrador
      *
      */
 
@@ -364,7 +362,7 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        if ($usuario->getRol() !== Rol::GESTOR->value) {
+        if ($usuario->getRol() !== 'ROLE_GESTOR') {
             return $this->json(['message' => 'El usuario no es un gestor'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -380,7 +378,7 @@ class UsuarioController extends AbstractController
     #[Route('/gestores', name: 'usuario_listar_gestores', methods: ['GET'])]
     public function listarGestores(): JsonResponse
     {
-        $gestores = $this->usuarioRepository->findBy(['rol' => Rol::GESTOR->value]);
+        $gestores = $this->usuarioRepository->findBy(['rol' => 'ROLE_GESTOR']);
 
         return $this->json($gestores, Response::HTTP_OK);
     }
@@ -394,7 +392,7 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        if ($usuario->getRol() !== Rol::GESTOR->value) {
+        if ($usuario->getRol() !== 'ROLE_GESTOR') {
             return $this->json(['message' => 'El usuario no es un gestor'], Response::HTTP_BAD_REQUEST);
         }
 
