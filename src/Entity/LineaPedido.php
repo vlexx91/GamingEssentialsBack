@@ -32,7 +32,7 @@ class LineaPedido
     #[Ignore]
     private ?Producto $producto = null;
 
-    #[ORM\ManyToOne(targetEntity: Pedido::class, inversedBy: 'lineaPedidos',cascade: ['remove'])]
+    #[ORM\ManyToOne(targetEntity: Pedido::class, cascade: ['remove'], inversedBy: 'lineaPedidos')]
     #[ORM\JoinColumn(name:'id_pedido',referencedColumnName: 'id',nullable: false)]
     #[Ignore]
     private ?Pedido $pedido = null;
@@ -85,7 +85,7 @@ class LineaPedido
 
     public function setPedido(?Pedido $pedido): static
     {
-        $this->Pedido = $pedido;
+        $this->pedido = $pedido;
 
         return $this;
     }
