@@ -15,27 +15,31 @@ use Symfony\Component\Serializer\Attribute\Ignore;
 #[ORM\Entity(repositoryClass: PedidoRepository::class)]
 class Pedido
 {
+    #[Groups(["pedido:read"])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(["pedido:read"])]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?DateTimeInterface $fecha = null;
 
+    #[Groups(["pedido:read"])]
     #[ORM\Column]
     private ?bool $estado = null;
 
-    #[ORM\Column(name:"pago_total" )]
+    #[Groups(["pedido:read"])]
+    #[ORM\Column(name: "pago_total")]
     private ?float $pagoTotal = null;
 
-
+    #[Groups(["pedido:read"])]
     #[ORM\ManyToOne(targetEntity: Perfil::class, inversedBy: 'pedidos')]
-    #[ORM\JoinColumn(name: 'id_perfil', referencedColumnName: 'id', onDelete: 'CASCADE', nullable: false)] // Cambia nullable según tus necesidades
+    #[ORM\JoinColumn(name: 'id_perfil', referencedColumnName: 'id', onDelete: 'CASCADE', nullable: false)]
     private ?Perfil $perfil = null;
 
-//    #[Ignore]
-    #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'pedido', cascade: ['remove'], orphanRemoval: true,fetch: "EAGER")]
+
+    #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'pedido', cascade: ['remove'], orphanRemoval: true, fetch: "EAGER")]
     private Collection $lineaPedidos;
 
     public function getLineaPedidos(): Collection
