@@ -8,6 +8,7 @@ use App\Entity\Pedido;
 use App\Entity\Perfil;
 use App\Entity\Producto;
 use App\Entity\Usuario;
+use App\Enum\Categoria;
 use App\Repository\PedidoRepository;
 use App\Repository\PerfilRepository;
 use App\Repository\ProductoRepository;
@@ -246,9 +247,39 @@ class PedidoController extends AbstractController
         if (!$perfil) {
             return new JsonResponse(['success' => false, 'message' => 'Perfil no encontrado'], 404);
         }
+
+        $productosPerifericos = [];
+        $otrosProductos = [];
+
+        foreach ($data['productos'] as $productoData) {
+            $producto = $em->getRepository(Producto::class)->find($productoData['id']);
+            if (!$producto) {
+                return new JsonResponse(['success' => false, 'message' => 'Producto no encontrado'], 404);
+            }
+
+            if ($producto->getCategoria() === Categoria::PERIFERICOS) {
+                $productosPerifericos[] = $productoData;
+            } else {
+                $otrosProductos[] = $productoData;
+            }
+        }
+
+        if (!empty($productosPerifericos) && !empty($otrosProductos)) {
+            $this->crearPedido($em, $perfil, $productosPerifericos, false);
+            $this->crearPedido($em, $perfil, $otrosProductos, true);
+        } else {
+            $estado = !empty($productosPerifericos) ? false : true;
+            $this->crearPedido($em, $perfil, $data['productos'], $estado);
+        }
+
+        return new JsonResponse(['success' => true, 'message' => 'Pedidos registrados con éxito']);
+    }
+
+    private function crearPedido(EntityManagerInterface $em, Perfil $perfil, array $productos, bool $estado): void
+    {
         $pedido = new Pedido();
         $pedido->setFecha(new \DateTime());
-        $pedido->setEstado(true);
+        $pedido->setEstado($estado);
         $pedido->setPagoTotal(0);
         $pedido->setPerfil($perfil);
 
@@ -256,16 +287,10 @@ class PedidoController extends AbstractController
         $em->flush();
 
         $total = 0;
-
         $productosComprados = '';
 
-        // Crear las líneas del pedido
-        foreach ($data['productos'] as $productoData) {
+        foreach ($productos as $productoData) {
             $producto = $em->getRepository(Producto::class)->find($productoData['id']);
-            if (!$producto) {
-                return new JsonResponse(['success' => false, 'message' => 'Producto no encontrado'], 404);
-            }
-
             $lineaPedido = new LineaPedido();
             $lineaPedido->setPedido($pedido);
             $lineaPedido->setProducto($producto);
@@ -273,27 +298,23 @@ class PedidoController extends AbstractController
             $lineaPedido->setPrecio($producto->getPrecio() * $productoData['cantidad']);
 
             $total += $productoData['cantidad'] * $producto->getPrecio();
-
             $productosComprados .= $producto->getNombre() .' '. 'Precio:  ' .$producto->getPrecio().'€ '. ' x '
                 . $productoData['cantidad'] . ' '.' Código:  '. $producto->getCodigoJuego() . "\n";
-
 
             $em->persist($lineaPedido);
         }
 
         $pedido->setPagoTotal($total);
-
         $em->flush();
 
         $email = (new Email())
             ->from('gameessentialsteam@gmail.com')
-            ->to($usuario->getCorreo())
+            ->to($perfil->getUsuario()->getCorreo())
             ->subject('Pedido registrado con éxito')
-            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" . $productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros');
+            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros');
 
+        $mailer = new Mailer(Transport::fromDsn($_ENV['MAILER_DSN']));
         $mailer->send($email);
-
-        return new JsonResponse(['success' => true, 'message' => 'Pedido registrado con éxito', 'pedidoId' => $pedido->getId()]);
     }
 
 
