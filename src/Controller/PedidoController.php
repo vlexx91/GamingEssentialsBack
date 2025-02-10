@@ -306,12 +306,12 @@ class PedidoController extends AbstractController
 
     #[Route('/totalpedidos', name: 'total_pedidos', methods: ['GET'])]
     public function verTodosPedidos(SerializerInterface $serializer): JsonResponse {
-//        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         $pedidos = $this->pedidoRepository->findAll();
 
         $total = array_reduce($pedidos, function ($carry, $pedido) {
-            return $carry + $pedido->getPagoTotal();
+            return $pedido->getEstado() ? $carry + $pedido->getPagoTotal() : $carry;
         }, 0);
 
         $data = [];
@@ -332,6 +332,26 @@ class PedidoController extends AbstractController
         ];
 
         return $this->json($response);
+    }
+
+    #[Route('/cambiarEstado/{id}', name: 'cambiar_estado_pedido', methods: ['PUT'])]
+    public function cambiarEstado(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        // Verificar si el usuario tiene el rol ROLE_ADMIN
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        // Buscar el pedido por su ID
+        $pedido = $this->pedidoRepository->find($id);
+
+        if (!$pedido) {
+            return $this->json(['message' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Cambiar el estado del pedido a true
+        $pedido->setEstado(true);
+        $em->flush();
+
+        return $this->json(['message' => 'Estado del pedido cambiado a true'], Response::HTTP_OK);
     }
 
 
