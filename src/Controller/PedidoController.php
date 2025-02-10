@@ -13,6 +13,8 @@ use App\Repository\PedidoRepository;
 use App\Repository\PerfilRepository;
 use App\Repository\ProductoRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -307,15 +309,60 @@ class PedidoController extends AbstractController
         $pedido->setPagoTotal($total);
         $em->flush();
 
+        $pdfPath = $this->generarPdfPedido($pedido, $productosComprados, $total);
+
+
         $email = (new Email())
             ->from('gameessentialsteam@gmail.com')
             ->to($perfil->getUsuario()->getCorreo())
             ->subject('Pedido registrado con éxito')
-            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros');
+            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros'.$pdfPath)
+            ->attachFromPath($pdfPath, 'GamingEssentials Pedido_' . $pedido->getId() . '.pdf');
+
 
         $mailer = new Mailer(Transport::fromDsn($_ENV['MAILER_DSN']));
         $mailer->send($email);
-    }
+
+        unlink($pdfPath);
+
+    }private function generarPdfPedido(Pedido $pedido, string $productosComprados, float $total): string
+{
+    $options = new Options();
+    $options->set('defaultFont', 'Arial');
+    $dompdf = new Dompdf($options);
+
+    $html = "
+    <h1>Detalle del Pedido</h1>
+    <table>
+        <tr>
+            <td><strong>Pedido ID:</strong></td>
+            <td>{$pedido->getId()}</td>
+        </tr>
+        <tr>
+            <td><strong>Fecha:</strong></td>
+            <td>{$pedido->getFecha()->format('d/m/Y')}</td>
+        </tr>
+        <tr>
+            <td><strong>Productos:</strong></td>
+            <td><pre>{$productosComprados}</pre></td>
+        </tr>
+        <tr>
+            <td><strong>Total:</strong></td>
+            <td>{$total}€</td>
+        </tr>
+    </table>
+    <p>Gracias por confiar en nosotros.</p>
+";
+
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    $pdfPath = sys_get_temp_dir() . '/pedido_' . $pedido->getId() . '.pdf';
+    file_put_contents($pdfPath, $dompdf->output());
+
+    return $pdfPath;
+}
 
 
     #[Route('/totalpedidos', name: 'total_pedidos', methods: ['GET'])]
