@@ -28,7 +28,7 @@ class LineaPedido
     #[ORM\JoinColumn(name:'id_producto',nullable: false,onDelete: 'NULL')]
     private ?Producto $producto = null;
 
-    #[ORM\ManyToOne(targetEntity: Pedido::class, inversedBy: 'lineaPedidos',cascade: ['remove'])]
+    #[ORM\ManyToOne(targetEntity: Pedido::class, cascade: ['remove'], inversedBy: 'lineaPedidos')]
     #[ORM\JoinColumn(name:'id_pedido',referencedColumnName: 'id',nullable: false)]
     private ?Pedido $pedido = null;
 

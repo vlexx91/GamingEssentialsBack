@@ -50,6 +50,11 @@ class UsuarioController extends AbstractController
 
         $datos = json_decode($request->getContent(), true);
 
+        $existingUser = $em->getRepository(Usuario::class)->findOneBy(['username' => $datos['username']]);
+        if ($existingUser) {
+            return $this->json(['message' => 'El nombre de usuario ya está en uso'], Response::HTTP_CONFLICT);
+        }
+
         $usuario = new Usuario();
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
@@ -76,10 +81,6 @@ class UsuarioController extends AbstractController
         $em->persist($perfil);
         $em->flush();
 
-
-        $em->persist($usuario);
-        $em->persist($perfil);
-        $em->flush();
 
         // Enviar correo electrónico
         $email = (new Email())

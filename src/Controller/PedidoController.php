@@ -46,16 +46,33 @@ class PedidoController extends AbstractController
         return $this->json($pedido);
     }
 
-    #[Route('/{id}', name: 'app_pedido_findById', methods: ['GET'])]
-    public function findById(int $id): JsonResponse
+    #[Route('/findall', name: 'todos_pedidos', methods: ['GET'])]
+    public function findAll(): JsonResponse
     {
-        $pedido = $this->pedidoRepository->find($id);
+        // Obtener todos los pedidos
+        $pedidos = $this->pedidoRepository->findAll();
 
-        if (!$pedido) {
-            return $this->json(['error' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
+        // Preparar la respuesta
+        $data = [];
+        foreach ($pedidos as $pedido) {
+            $data[] = [
+                'id' => $pedido->getId(),
+                'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
+                'estado' => $pedido->getEstado(),
+                'pagoTotal' => $pedido->getPagoTotal(),
+                'perfil' => [
+                    'id' => $pedido->getPerfil()->getId(),
+                    'nombre' => $pedido->getPerfil()->getNombre(),
+                    'apellido' => $pedido->getPerfil()->getApellido(),
+                    'direccion' => $pedido->getPerfil()->getDireccion(),
+                    'dni' => $pedido->getPerfil()->getDni(),
+                    'telefono' => $pedido->getPerfil()->getTelefono(),
+                    'fecha_nacimiento' => $pedido->getPerfil()->getFechaNacimiento()->format('Y-m-d'),
+                ],
+            ];
         }
 
-        return $this->json($pedido);
+        return $this->json($data);
     }
 
     #[Route('/crear', name: 'crear_pedido', methods: ['POST'])]
@@ -148,8 +165,24 @@ class PedidoController extends AbstractController
         }
 
         // Serializar los pedidos con los grupos
-        $data = $serializer->normalize($pedidos, null, ['groups' => ['pedido:read']]);
-
+        $data = [];
+        foreach ($pedidos as $pedido) {
+            $data[] = [
+                'id' => $pedido->getId(),
+                'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
+                'estado' => $pedido->getEstado(),
+                'pagoTotal' => $pedido->getPagoTotal(),
+                'perfil' => [
+                    'id' => $pedido->getPerfil()->getId(),
+                    'nombre' => $pedido->getPerfil()->getNombre(),
+                    'apellido' => $pedido->getPerfil()->getApellido(),
+                    'direccion'=> $pedido->getPerfil()->getDireccion(),
+                    'dni'=>$pedido->getPerfil()->getDni(),
+                    'telefono'=>$pedido->getPerfil()->getTelefono(),
+                    'fecha_nacimiento'=>$pedido->getPerfil()->getFechaNacimiento()
+                ],
+            ];
+        }
         // Devolver los pedidos en formato JSON
         return $this->json($data);
     }
@@ -263,4 +296,40 @@ class PedidoController extends AbstractController
     }
 
 
+    #[Route('/totalpedidos', name: 'total_pedidos', methods: ['GET'])]
+    public function verTodosPedidos(SerializerInterface $serializer): JsonResponse {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $pedidos = $this->pedidoRepository->findAll();
+
+        $total = array_reduce($pedidos, function ($carry, $pedido) {
+            return $carry + $pedido->getPagoTotal();
+        }, 0);
+
+        $data = ['pedidos' => $pedidos, 'total' => $total];
+
+        // Serializa los pedidos usando el grupo "pedido:read"
+        $jsonPedidos = $serializer->serialize($data, 'json', ['groups' => 'pedido:read']);
+
+        return new JsonResponse($jsonPedidos, 200, [], true);
+    }
+
+
+    //ESTE METODO EL ULTIMO SIEMPRE SI NO JODE TO-DO
+    //REPITO
+    //EL ULTIMO SI O SI U OS REVIENTA EL METODO QUE VAYA DELANTE
+    //EL
+    //ULTIMO
+    //S I E M P R E
+    #[Route('/{id}', name: 'app_pedido_findById', methods: ['GET'])]
+    public function findById(int $id): JsonResponse
+    {
+        $pedido = $this->pedidoRepository->find($id);
+
+        if (!$pedido) {
+            return $this->json(['error' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json($pedido);
+    }
 }
