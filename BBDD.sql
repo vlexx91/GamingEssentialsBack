@@ -17,7 +17,7 @@ create table perfil(
 	dni char(9) not null,
 	fecha_nacimiento timeStamp(6) not null,
     telefono varchar(9) not null,
-    imagen varchar(900) not null,
+    imagen varchar(900),
 	id_usuario int not null,
     constraint fk_perfil_usuario foreign key (id_usuario) references usuario(id)
 );
@@ -31,7 +31,8 @@ create table producto(
 	plataforma int not null,
 	imagen varchar(900) not null,
 	precio float not null,
-	categoria int not null
+	categoria int not null,
+    codigo_juego varchar(900) not null,
 );
 
 create table valoraciones(
