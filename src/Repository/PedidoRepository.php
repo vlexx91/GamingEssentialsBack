@@ -48,4 +48,16 @@ class PedidoRepository extends ServiceEntityRepository
             ->getResult();
 
     }
+    public function findPedidosWithLineasByPerfil()
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->select('p', 'lp', 'pr', 'u')
+            ->join('p.lineasPedido', 'lp')
+            ->join('p.perfil', 'pr')
+            ->join('pr.usuario', 'u')
+            ->getQuery();
+
+        return $qb->getResult();
+    }
+
 }

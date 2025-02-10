@@ -16,25 +16,20 @@ class LineaPedido
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['linea_pedido'])]
     private ?int $id = null;
 
     #[ORM\Column(type: "integer")]
-    #[Groups(['linea_pedido'])]
     private ?int $cantidad = null;
 
     #[ORM\Column]
-    #[Groups(['linea_pedido'])]
     private ?float $precio = null;
 
     #[ORM\ManyToOne(targetEntity: Producto::class, inversedBy: 'lineaPedidos')]
     #[ORM\JoinColumn(name:'id_producto',nullable: false,onDelete: 'NULL')]
-    #[Ignore]
     private ?Producto $producto = null;
 
-    #[ORM\ManyToOne(targetEntity: Pedido::class, inversedBy: 'lineaPedidos',cascade: ['remove'])]
+    #[ORM\ManyToOne(targetEntity: Pedido::class, cascade: ['remove'], inversedBy: 'lineaPedidos')]
     #[ORM\JoinColumn(name:'id_pedido',referencedColumnName: 'id',nullable: false)]
-    #[Ignore]
     private ?Pedido $pedido = null;
 
     public function getId(): ?int
@@ -85,7 +80,7 @@ class LineaPedido
 
     public function setPedido(?Pedido $pedido): static
     {
-        $this->Pedido = $pedido;
+        $this->pedido = $pedido;
 
         return $this;
     }

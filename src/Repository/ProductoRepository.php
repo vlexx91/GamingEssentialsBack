@@ -98,7 +98,7 @@ class ProductoRepository extends ServiceEntityRepository
     public function findTop5MasVendidos()
     {
         return $this->createQueryBuilder('p')
-            ->select('p.id, p.nombre, SUM(lp.cantidad) as total_vendidos')
+            ->select('p.id, p.nombre,p.precio, p.imagen,p.descripcion ,SUM(lp.cantidad) as total_vendidos')
             ->join('App\Entity\LineaPedido', 'lp', 'WITH', 'lp.producto = p.id')
             ->groupBy('p.id')
             ->orderBy('total_vendidos', 'DESC')
