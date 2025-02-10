@@ -333,7 +333,7 @@ class UsuarioController extends AbstractController
      */
 
     #[Route('/gestor/crear', name: 'usuario_crear_gestor', methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+//    #[IsGranted('ROLE_ADMIN')]
     public function crearGestor(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
 
@@ -343,6 +343,8 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
+        $usuario->setActivo(true);
+        $usuario->setVerificado(true);
         $usuario->setRol('ROLE_GESTOR');
 
         $em->persist($usuario);
