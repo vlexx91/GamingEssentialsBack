@@ -35,11 +35,11 @@ class Pedido
 
     #[Groups(["pedido:read"])]
     #[ORM\ManyToOne(targetEntity: Perfil::class, inversedBy: 'pedidos')]
-    #[ORM\JoinColumn(name: 'id_perfil', referencedColumnName: 'id', onDelete: 'CASCADE', nullable: false)]
+    #[ORM\JoinColumn(name: 'id_perfil', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Perfil $perfil = null;
 
 
-    #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'pedido', cascade: ['remove'], orphanRemoval: true, fetch: "EAGER")]
+    #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'pedido', cascade: ['remove'], fetch: "EAGER", orphanRemoval: true)]
     private Collection $lineaPedidos;
 
     public function getLineaPedidos(): Collection
