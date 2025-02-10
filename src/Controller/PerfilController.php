@@ -7,6 +7,7 @@ use App\Entity\Perfil;
 use App\Entity\Usuario;
 use App\Enum\Rol;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -97,6 +98,68 @@ class PerfilController extends AbstractController
             $usuario->setPassword($hashedPassword);
         }
 
+        $em->flush();
+
+        return $this->json(['message' => 'Perfil y Usuario actualizados correctamente'], Response::HTTP_OK);
+    }
+
+    //Editar a través del token
+
+    #[Route('/editarportoken', name: 'perfil_editar_token', methods: ['PUT'])]
+    public function editByToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $em, PerfilRepository $perfilRepository, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    {
+        $token = $request->headers->get('Authorization');
+        if (!$token) {
+            return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+
+        try {
+            $finalToken = $jwtManager->parse($formatToken);
+            $username = $finalToken['username'] ?? null;
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$username) {
+            return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        $usuario = $em->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+
+        if (!$usuario) {
+            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $perfil = $perfilRepository->findOneBy(['usuario' => $usuario]);
+
+        if (!$perfil) {
+            return new JsonResponse(['message' => 'Profile not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $datos = json_decode($request->getContent(), true);
+
+        // Actualizar los campos del perfil
+        $perfil->setNombre($datos['nombre']);
+        $perfil->setApellido($datos['apellidos']);
+        $perfil->setDireccion($datos['direccion']);
+        $perfil->setDni($datos['dni']);
+        $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
+        $perfil->setTelefono($datos['telefono']);
+
+        // Actualizar el usuario asociado al perfil
+        $usuario->setUsername($datos['username']);
+        $usuario->setCorreo($datos['email']);
+        $usuario->setRol('ROLE_CLIENTE');
+
+        // Si se proporciona una nueva contraseña, la actualizamos
+        if (!empty($datos['password'])) {
+            $hashedPassword = $passwordHasher->hashPassword($usuario, $datos['password']);
+            $usuario->setPassword($hashedPassword);
+        }
+
+        // Guardamos los cambios
         $em->flush();
 
         return $this->json(['message' => 'Perfil y Usuario actualizados correctamente'], Response::HTTP_OK);
