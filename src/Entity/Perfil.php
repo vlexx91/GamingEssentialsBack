@@ -34,15 +34,12 @@ class Perfil
     #[ORM\Column(length: 100)]
     private ?string $telefono = null;
 
+    #[ORM\Column(length: 900)]
+    private ?string $imagen;
 
-
-    #[Ignore]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fecha_nacimiento = null;
 
-
-
-    #[Ignore]
     #[ORM\OneToOne(targetEntity: Usuario::class, cascade: ["remove"])]
     #[ORM\JoinColumn(name: 'id_usuario', referencedColumnName: 'id', nullable: false)] // Cambia nullable según tus necesidades
     private ?Usuario $usuario = null;

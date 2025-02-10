@@ -49,7 +49,6 @@ class Producto
     #[Groups(['producto'])]
     private ?Plataforma $plataforma = null;
 
-    #[Ignore]
     #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'producto')]
     private Collection $lineaPedidos;
 
