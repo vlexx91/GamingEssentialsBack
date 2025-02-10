@@ -34,6 +34,8 @@ class Perfil
     #[ORM\Column(length: 100)]
     private ?string $telefono = null;
 
+    #[ORM\Column(length: 900)]
+    private ?string $imagen;
 
 //    #[Ignore]
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]

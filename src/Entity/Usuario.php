@@ -45,10 +45,7 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 100)]
     private ?string $rol = null;
 
-
-
     //ONE TO MANY de perfiles
-    #[Ignore]
     #[ORM\OneToOne(targetEntity: Perfil::class, mappedBy: 'usuario', cascade: ['persist', 'remove'])]
     private ?Perfil $perfil;
 

@@ -54,7 +54,7 @@ class Producto
 
 
 
-    #[Ignore]
+//    #[Ignore]
     #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'producto')]
     private Collection $lineaPedidos;
 
