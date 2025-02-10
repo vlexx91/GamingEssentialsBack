@@ -16,6 +16,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -190,6 +193,9 @@ class PedidoController extends AbstractController
     #[Route('/pedido/nuevo', name: 'nuevo_pedido', methods: ['POST'])]
     public function nuevoPedido(Request $request, EntityManagerInterface $em): JsonResponse
     {
+        $transport = Transport::fromDsn($_ENV['MAILER_DSN']);
+        $mailer = new Mailer($transport);
+
         $data = json_decode($request->getContent(), true);
 
         if (!$data || !isset($data['productos']) || count($data['productos']) === 0) {
@@ -209,7 +215,7 @@ class PedidoController extends AbstractController
         }
         $pedido = new Pedido();
         $pedido->setFecha(new \DateTime());
-        $pedido->setEstado(false);
+        $pedido->setEstado(true);
         $pedido->setPagoTotal(0);
         $pedido->setPerfil($perfil);
 
@@ -217,6 +223,8 @@ class PedidoController extends AbstractController
         $em->flush();
 
         $total = 0;
+
+        $productosComprados = '';
 
         // Crear las líneas del pedido
         foreach ($data['productos'] as $productoData) {
@@ -229,9 +237,12 @@ class PedidoController extends AbstractController
             $lineaPedido->setPedido($pedido);
             $lineaPedido->setProducto($producto);
             $lineaPedido->setCantidad($productoData['cantidad']);
-            $lineaPedido->setPrecio($producto->getPrecio());
+            $lineaPedido->setPrecio($producto->getPrecio() * $productoData['cantidad']);
 
             $total += $productoData['cantidad'] * $producto->getPrecio();
+
+            $productosComprados .= $producto->getNombre() .' '. $producto->getPrecio().'€ '. ' x ' . $productoData['cantidad'] . "\n";
+
 
             $em->persist($lineaPedido);
         }
@@ -239,6 +250,14 @@ class PedidoController extends AbstractController
         $pedido->setPagoTotal($total);
 
         $em->flush();
+
+        $email = (new Email())
+            ->from('gameessentialsteam@gmail.com')
+            ->to($usuario->getCorreo())
+            ->subject('Pedido registrado con éxito')
+            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" . $productosComprados. "\n" .'Total: ' . $total . '€');
+
+        $mailer->send($email);
 
         return new JsonResponse(['success' => true, 'message' => 'Pedido registrado con éxito', 'pedidoId' => $pedido->getId()]);
     }
