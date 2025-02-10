@@ -274,7 +274,8 @@ class PedidoController extends AbstractController
 
             $total += $productoData['cantidad'] * $producto->getPrecio();
 
-            $productosComprados .= $producto->getNombre() .' '. $producto->getPrecio().'€ '. ' x ' . $productoData['cantidad'] . "\n";
+            $productosComprados .= $producto->getNombre() .' '. 'Precio:  ' .$producto->getPrecio().'€ '. ' x '
+                . $productoData['cantidad'] . ' '.' Código:  '. $producto->getCodigoJuego() . "\n";
 
 
             $em->persist($lineaPedido);
@@ -288,7 +289,7 @@ class PedidoController extends AbstractController
             ->from('gameessentialsteam@gmail.com')
             ->to($usuario->getCorreo())
             ->subject('Pedido registrado con éxito')
-            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" . $productosComprados. "\n" .'Total: ' . $total . '€');
+            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" . $productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros');
 
         $mailer->send($email);
 
