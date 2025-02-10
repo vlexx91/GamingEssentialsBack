@@ -50,7 +50,7 @@ class Producto
     private ?Plataforma $plataforma = null;
 
     #[Ignore]
-    #[ORM\OneToMany(mappedBy: 'producto', targetEntity: LineaPedido::class)]
+    #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'producto')]
     private Collection $lineaPedidos;
 
     public function getLineaPedidos(): Collection

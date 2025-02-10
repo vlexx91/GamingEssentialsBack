@@ -5,6 +5,9 @@ namespace App\Controller;
 use App\DTO\CrearPedidoLineaPedidoDTO;
 use App\Entity\LineaPedido;
 use App\Entity\Pedido;
+use App\Entity\Perfil;
+use App\Entity\Producto;
+use App\Entity\Usuario;
 use App\Repository\PedidoRepository;
 use App\Repository\PerfilRepository;
 use App\Repository\ProductoRepository;
@@ -13,11 +16,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Bundle\SecurityBundle\Security;
-
 
 #[Route('/api/pedido')]
 class PedidoController extends AbstractController
@@ -26,25 +26,16 @@ class PedidoController extends AbstractController
     private EntityManagerInterface $em;
     private PerfilRepository $perfilRepository;
     private ProductoRepository $productoRepository;
-    private Security $security;
 
-
-    public function __construct(PedidoRepository $pedidoRepository,
-                                EntityManagerInterface $em,
-                                PerfilRepository $perfilRepository,
-                                ProductoRepository $productoRepository,
-                                Security $security
-
-    )
+    public function __construct(PedidoRepository $pedidoRepository, EntityManagerInterface $em, PerfilRepository $perfilRepository,ProductoRepository $productoRepository)
     {
         $this->pedidoRepository = $pedidoRepository;
         $this->em = $em;
         $this->perfilRepository = $perfilRepository;
         $this->productoRepository = $productoRepository;
-        $this->security = $security;
     }
 
-    #[Route('/findall', name: 'app_pedido')]
+    #[Route('', name: 'app_pedido')]
     public function index(): Response
     {
        $pedido = $this->pedidoRepository->findAll();
@@ -52,51 +43,36 @@ class PedidoController extends AbstractController
         return $this->json($pedido);
     }
 
-    #[Route('/perfilpedido', name: 'pedidos_por_usuario', methods: ['GET'])]
-    public function pedidosPorUsuario(): JsonResponse
+    #[Route('/findall', name: 'todos_pedidos', methods: ['GET'])]
+    public function findAll(): JsonResponse
     {
-        // Obtener el usuario autenticado desde el token
-        $usuario = $this->security->getUser();
+        // Obtener todos los pedidos
+        $pedidos = $this->pedidoRepository->findAll();
 
-
-        if (!$usuario) {
-            return new JsonResponse(['message' => 'Usuario no autenticado'], 401);
+        // Preparar la respuesta
+        $data = [];
+        foreach ($pedidos as $pedido) {
+            $data[] = [
+                'id' => $pedido->getId(),
+                'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
+                'estado' => $pedido->getEstado(),
+                'pagoTotal' => $pedido->getPagoTotal(),
+                'perfil' => [
+                    'id' => $pedido->getPerfil()->getId(),
+                    'nombre' => $pedido->getPerfil()->getNombre(),
+                    'apellido' => $pedido->getPerfil()->getApellido(),
+                    'direccion' => $pedido->getPerfil()->getDireccion(),
+                    'dni' => $pedido->getPerfil()->getDni(),
+                    'telefono' => $pedido->getPerfil()->getTelefono(),
+                    'fecha_nacimiento' => $pedido->getPerfil()->getFechaNacimiento()->format('Y-m-d'),
+                ],
+            ];
         }
 
-        // Buscar el perfil asociado al usuario
-        $perfil = $this->perfilRepository->findOneBy(['usuario' => $usuario]);
-
-        if (!$perfil || !$perfil->getId()) {
-            return new JsonResponse(['message' => 'No se encontró un perfil válido para este usuario'], 404);
-        }
-
-        // Buscar los pedidos asociados a ese perfil usando findByPerfil
-        $pedidos = $this->pedidoRepository->findByPerfil($perfil);
-
-        if (empty($pedidos)) {
-            return new JsonResponse(['message' => 'No se encontraron pedidos para este perfil'], 404);
-        }
-
-        return $this->json($pedidos);
+        return $this->json($data);
     }
 
-    #[Route('/{id}', name: 'app_pedido_findById', methods: ['GET'])]
-    public function findById(string $id): JsonResponse
-    {
-        $id = (int) $id;
-
-        $pedido = $this->pedidoRepository->find($id);
-
-        if (!$pedido) {
-            return $this->json(['error' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
-        }
-
-        return $this->json($pedido);
-    }
-
-
-
-    #[Route('/crearPorDTO', name: 'crear_pedido', methods: ['POST'])]
+    #[Route('/crear', name: 'crear_pedido', methods: ['POST'])]
     public function crear(Request $request, SerializerInterface $serializer): JsonResponse
     {
         // Decodificar el JSON en un DTO
@@ -186,92 +162,155 @@ class PedidoController extends AbstractController
         }
 
         // Serializar los pedidos con los grupos
-        $data = $serializer->normalize($pedidos, null, ['groups' => ['pedido:read']]);
-
+        $data = [];
+        foreach ($pedidos as $pedido) {
+            $data[] = [
+                'id' => $pedido->getId(),
+                'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
+                'estado' => $pedido->getEstado(),
+                'pagoTotal' => $pedido->getPagoTotal(),
+                'perfil' => [
+                    'id' => $pedido->getPerfil()->getId(),
+                    'nombre' => $pedido->getPerfil()->getNombre(),
+                    'apellido' => $pedido->getPerfil()->getApellido(),
+                    'direccion'=> $pedido->getPerfil()->getDireccion(),
+                    'dni'=>$pedido->getPerfil()->getDni(),
+                    'telefono'=>$pedido->getPerfil()->getTelefono(),
+                    'fecha_nacimiento'=>$pedido->getPerfil()->getFechaNacimiento()
+                ],
+            ];
+        }
         // Devolver los pedidos en formato JSON
         return $this->json($data);
     }
 
-    #[Route('/crear', name: 'crear_pedido', methods: ['POST'])]
-    public function crearDesdeCarrito(SessionInterface $session): JsonResponse
+    //POR REALIZAR
+//    #[Route('/realizar', name: 'realizar_pedido', methods: ['POST'])]
+//    public function realizarPedido(Request $request): JsonResponse
+//    {
+//        $datos = json_decode($request->getContent(), true);
+//        $pedido = new Pedido();
+//        $total = 0.0;
+//
+//        $cliente = $this->perfilRepository->findPerfilByUsuarioId($datos->getIdUsuario());
+//        $pedido->setPerfil($cliente);
+//        $pedido->setFecha(new \DateTime());
+//
+//        $this->em->persist($pedido);
+//        $this->em->flush();
+//
+//        foreach ($datos->getProductos() as $productoCarritoDTO) {
+//            $lineaPedido = new LineaPedido();
+//            $lineaPedido->setPedido($pedido);
+//            $lineaPedido->setCantidad($productoCarritoDTO->getCantidad());
+////            $lineaPedido->setProducto($this->productoService->getProductoById($productoCarritoDTO->getIdProducto()));
+//            $lineaPedido->setPrecio($productoCarritoDTO->getPrecioUnitario());
+//            $lineaPedido->setProducto($this->productoRepository->find($productoCarritoDTO->getIdProducto()));
+//
+//            $this->em->persist($lineaPedido);
+//            $total += $productoCarritoDTO->getTotal();
+//
+//        }
+//
+//
+//        $this->em->flush();
+//
+//
+//        return new JsonResponse(['message' => 'Pedido realizado correctamente'], JsonResponse::HTTP_CREATED);
+//    }
+//
+
+    #[Route('/pedido/nuevo', name: 'nuevo_pedido', methods: ['POST'])]
+    public function nuevoPedido(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $cart = $session->get('cart', []);
+        $data = json_decode($request->getContent(), true);
 
-        if (empty($cart)) {
-            return $this->json(['error' => 'El carrito está vacío'], JsonResponse::HTTP_BAD_REQUEST);
+        if (!$data || !isset($data['productos']) || count($data['productos']) === 0) {
+            return new JsonResponse(['success' => false, 'message' => 'Carrito vacío'], 400);
         }
 
-        $usuario = $this->getUser();
+        $username = $this->getUser()->getUsername();
+
+        $usuario = $em->getRepository(Usuario::class)->findOneBy(['username' => $username]);
         if (!$usuario) {
-            return $this->json(['error' => 'Usuario no autenticado'], JsonResponse::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
         }
 
-        $perfil = $this->perfilRepository->findOneBy(['usuario' => $usuario]);
+        $perfil = $em->getRepository(Perfil::class)->findOneBy(['usuario' => $usuario]);
         if (!$perfil) {
-            return $this->json(['error' => 'Perfil no encontrado'], JsonResponse::HTTP_NOT_FOUND);
+            return new JsonResponse(['success' => false, 'message' => 'Perfil no encontrado'], 404);
         }
-
-        $pagoTotal = 0;
-
-        // ✅ 1. Calcular el total del pedido antes de crearlo
-        foreach ($cart as $item) {
-            $producto = $this->productoRepository->find($item['id']);
-            if (!$producto) {
-                return $this->json(['error' => 'Producto no encontrado: ' . $item['id']], JsonResponse::HTTP_NOT_FOUND);
-            }
-            $pagoTotal += $producto->getPrecio() * $item['quantity'];
-        }
-
-        // ✅ 2. Crear y guardar el pedido en la base de datos
         $pedido = new Pedido();
         $pedido->setFecha(new \DateTime());
-        $pedido->setEstado(true);
+        $pedido->setEstado(false);
+        $pedido->setPagoTotal(0);
         $pedido->setPerfil($perfil);
-        $pedido->setPagoTotal($pagoTotal);
 
-        $this->em->persist($pedido);
-        $this->em->flush(); // 🔹 Asegura que el pedido tiene un ID antes de asociarlo con las líneas
+        $em->persist($pedido);
+        $em->flush();
 
-        dump($pedido->getId()); // 🔍 Verifica si el ID del pedido se ha generado correctamente
+        $total = 0;
 
-
-        // ❗ Verificamos que realmente el Pedido tiene un ID antes de continuar
-        if (!$pedido->getId()) {
-            return $this->json(['error' => 'No se pudo crear el pedido correctamente'], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        // ✅ 3. Asociamos las líneas de pedido al pedido creado
-        foreach ($cart as $item) {
-            $producto = $this->productoRepository->find($item['id']);
+        // Crear las líneas del pedido
+        foreach ($data['productos'] as $productoData) {
+            $producto = $em->getRepository(Producto::class)->find($productoData['id']);
             if (!$producto) {
-                return $this->json(['error' => 'Producto no encontrado: ' . $item['id']], JsonResponse::HTTP_NOT_FOUND);
+                return new JsonResponse(['success' => false, 'message' => 'Producto no encontrado'], 404);
             }
 
-            $precioLinea = $producto->getPrecio() * $item['quantity'];
-
             $lineaPedido = new LineaPedido();
-            $lineaPedido->setCantidad($item['quantity']);
-            $lineaPedido->setPrecio($precioLinea);
+            $lineaPedido->setPedido($pedido);
             $lineaPedido->setProducto($producto);
-            $lineaPedido->setPedido($pedido); // ✅ Ahora el pedido ya tiene un ID
+            $lineaPedido->setCantidad($productoData['cantidad']);
+            $lineaPedido->setPrecio($producto->getPrecio());
 
-            dump($lineaPedido); // 🔍 Verifica que el pedido se ha asignado correctamente
+            $total += $productoData['cantidad'] * $producto->getPrecio();
 
-
-            $this->em->persist($lineaPedido);
+            $em->persist($lineaPedido);
         }
 
-        $this->em->flush(); // 🔹 Guardamos las líneas de pedido correctamente
+        $pedido->setPagoTotal($total);
 
-        // Limpiar el carrito después de hacer el pedido
-        $session->remove('cart');
+        $em->flush();
 
-        return $this->json([
-            'message' => 'Pedido creado correctamente',
-            'id' => $pedido->getId(),
-            'total' => $pagoTotal
-        ], JsonResponse::HTTP_CREATED);
+        return new JsonResponse(['success' => true, 'message' => 'Pedido registrado con éxito', 'pedidoId' => $pedido->getId()]);
     }
 
 
+    #[Route('/totalpedidos', name: 'total_pedidos', methods: ['GET'])]
+    public function verTodosPedidos(SerializerInterface $serializer): JsonResponse {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $pedidos = $this->pedidoRepository->findAll();
+
+        $total = array_reduce($pedidos, function ($carry, $pedido) {
+            return $carry + $pedido->getPagoTotal();
+        }, 0);
+
+        $data = ['pedidos' => $pedidos, 'total' => $total];
+
+        // Serializa los pedidos usando el grupo "pedido:read"
+        $jsonPedidos = $serializer->serialize($data, 'json', ['groups' => 'pedido:read']);
+
+        return new JsonResponse($jsonPedidos, 200, [], true);
+    }
+
+
+    //ESTE METODO EL ULTIMO SIEMPRE SI NO JODE TO-DO
+    //REPITO
+    //EL ULTIMO SI O SI U OS REVIENTA EL METODO QUE VAYA DELANTE
+    //EL
+    //ULTIMO
+    //S I E M P R E
+    #[Route('/{id}', name: 'app_pedido_findById', methods: ['GET'])]
+    public function findById(int $id): JsonResponse
+    {
+        $pedido = $this->pedidoRepository->find($id);
+
+        if (!$pedido) {
+            return $this->json(['error' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json($pedido);
+    }
 }
