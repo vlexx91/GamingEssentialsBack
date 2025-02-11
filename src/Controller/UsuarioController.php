@@ -345,6 +345,9 @@ class UsuarioController extends AbstractController
         $perfilCrearDTO->setUsername($perfil->getUsuario()->getUsername());
         $perfilCrearDTO->setPassword($perfil->getUsuario()->getPassword());
         $perfilCrearDTO->setRol($perfil->getUsuario()->getRol());
+        $perfilCrearDTO->setTelefono($perfil->getTelefono());
+        $perfilCrearDTO->setImagen($perfil->getImagen());
+
 
         return $this->json($perfilCrearDTO, Response::HTTP_OK);
     }
