@@ -8,15 +8,21 @@ use App\Entity\Pedido;
 use App\Entity\Perfil;
 use App\Entity\Producto;
 use App\Entity\Usuario;
+use App\Enum\Categoria;
 use App\Repository\PedidoRepository;
 use App\Repository\PerfilRepository;
 use App\Repository\ProductoRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -73,60 +79,60 @@ class PedidoController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/crear', name: 'crear_pedido', methods: ['POST'])]
-    public function crear(Request $request, SerializerInterface $serializer): JsonResponse
-    {
-        // Decodificar el JSON en un DTO
-        try {
-            /** @var CrearPedidoLineaPedidoDTO $crearPedidoLineaPedidoDTO */
-            $crearPedidoLineaPedidoDTO = $serializer->deserialize($request->getContent(), CrearPedidoLineaPedidoDTO::class, 'json');
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Datos inválidos'], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
-        // Buscar el perfil del pedido
-        $perfil = $this->perfilRepository->find($crearPedidoLineaPedidoDTO->perfilId);
-        if (!$perfil) {
-            return $this->json(['error' => 'Perfil no encontrado'], JsonResponse::HTTP_NOT_FOUND);
-        }
-
-        // Crear el pedido
-        $pedido = new Pedido();
-        $pedido->setFecha(new \DateTime());
-        $pedido->setEstado($crearPedidoLineaPedidoDTO->estado);
-        $pedido->setPerfil($perfil);
-
-        $pagoTotal = 0; // Variable para calcular el pago total del pedido
-
-        // Procesar las líneas de pedido
-        foreach ($crearPedidoLineaPedidoDTO->lineasPedido as $lineaDTO) {
-            $producto = $this->productoRepository->find($lineaDTO->productoId);
-            if (!$producto) {
-                return $this->json(['error' => 'Producto no encontrado: ' . $lineaDTO->productoId], JsonResponse::HTTP_NOT_FOUND);
-            }
-
-            // Calcular el precio de la línea: precio del producto * cantidad
-            $precioLinea = $producto->getPrecio() * $lineaDTO->cantidad;
-            $pagoTotal += $precioLinea; // Sumar el precio al total del pedido
-
-            $lineaPedido = new LineaPedido();
-            $lineaPedido->setCantidad($lineaDTO->cantidad);
-            $lineaPedido->setPrecio($precioLinea); // Asignar el precio calculado
-            $lineaPedido->setProducto($producto);
-            $lineaPedido->setPedido($pedido);
-
-            $this->em->persist($lineaPedido);
-        }
-
-        // Asignar el pago total al pedido
-        $pedido->setPagoTotal($pagoTotal);
-
-        // Guardar el pedido y las líneas en la base de datos
-        $this->em->persist($pedido);
-        $this->em->flush();
-
-        return $this->json(['message' => 'Pedido creado correctamente', 'id' => $pedido->getId()], JsonResponse::HTTP_CREATED);
-    }
+//    #[Route('/crear', name: 'crear_pedido', methods: ['POST'])]
+//    public function crear(Request $request, SerializerInterface $serializer): JsonResponse
+//    {
+//        // Decodificar el JSON en un DTO
+//        try {
+//            /** @var CrearPedidoLineaPedidoDTO $crearPedidoLineaPedidoDTO */
+//            $crearPedidoLineaPedidoDTO = $serializer->deserialize($request->getContent(), CrearPedidoLineaPedidoDTO::class, 'json');
+//        } catch (\Exception $e) {
+//            return $this->json(['error' => 'Datos inválidos'], JsonResponse::HTTP_BAD_REQUEST);
+//        }
+//
+//        // Buscar el perfil del pedido
+//        $perfil = $this->perfilRepository->find($crearPedidoLineaPedidoDTO->perfilId);
+//        if (!$perfil) {
+//            return $this->json(['error' => 'Perfil no encontrado'], JsonResponse::HTTP_NOT_FOUND);
+//        }
+//
+//        // Crear el pedido
+//        $pedido = new Pedido();
+//        $pedido->setFecha(new \DateTime());
+//        $pedido->setEstado($crearPedidoLineaPedidoDTO->estado);
+//        $pedido->setPerfil($perfil);
+//
+//        $pagoTotal = 0; // Variable para calcular el pago total del pedido
+//
+//        // Procesar las líneas de pedido
+//        foreach ($crearPedidoLineaPedidoDTO->lineasPedido as $lineaDTO) {
+//            $producto = $this->productoRepository->find($lineaDTO->productoId);
+//            if (!$producto) {
+//                return $this->json(['error' => 'Producto no encontrado: ' . $lineaDTO->productoId], JsonResponse::HTTP_NOT_FOUND);
+//            }
+//
+//            // Calcular el precio de la línea: precio del producto * cantidad
+//            $precioLinea = $producto->getPrecio() * $lineaDTO->cantidad;
+//            $pagoTotal += $precioLinea; // Sumar el precio al total del pedido
+//
+//            $lineaPedido = new LineaPedido();
+//            $lineaPedido->setCantidad($lineaDTO->cantidad);
+//            $lineaPedido->setPrecio($precioLinea); // Asignar el precio calculado
+//            $lineaPedido->setProducto($producto);
+//            $lineaPedido->setPedido($pedido);
+//
+//            $this->em->persist($lineaPedido);
+//        }
+//
+//        // Asignar el pago total al pedido
+//        $pedido->setPagoTotal($pagoTotal);
+//
+//        // Guardar el pedido y las líneas en la base de datos
+//        $this->em->persist($pedido);
+//        $this->em->flush();
+//
+//        return $this->json(['message' => 'Pedido creado correctamente', 'id' => $pedido->getId()], JsonResponse::HTTP_CREATED);
+//    }
 
     #[Route('/eliminar/{id}', name: 'eliminar_pedido', methods: ['DELETE'])]
     public function eliminarPedido(int $id): JsonResponse
@@ -295,6 +301,9 @@ class PedidoController extends AbstractController
     #[Route('/pedido/nuevo', name: 'nuevo_pedido', methods: ['POST'])]
     public function nuevoPedido(Request $request, EntityManagerInterface $em): JsonResponse
     {
+        $transport = Transport::fromDsn($_ENV['MAILER_DSN']);
+        $mailer = new Mailer($transport);
+
         $data = json_decode($request->getContent(), true);
 
         if (!$data || !isset($data['productos']) || count($data['productos']) === 0) {
@@ -312,9 +321,39 @@ class PedidoController extends AbstractController
         if (!$perfil) {
             return new JsonResponse(['success' => false, 'message' => 'Perfil no encontrado'], 404);
         }
+
+        $productosPerifericos = [];
+        $otrosProductos = [];
+
+        foreach ($data['productos'] as $productoData) {
+            $producto = $em->getRepository(Producto::class)->find($productoData['id']);
+            if (!$producto) {
+                return new JsonResponse(['success' => false, 'message' => 'Producto no encontrado'], 404);
+            }
+
+            if ($producto->getCategoria() === Categoria::PERIFERICOS) {
+                $productosPerifericos[] = $productoData;
+            } else {
+                $otrosProductos[] = $productoData;
+            }
+        }
+
+        if (!empty($productosPerifericos) && !empty($otrosProductos)) {
+            $this->crearPedido($em, $perfil, $productosPerifericos, false);
+            $this->crearPedido($em, $perfil, $otrosProductos, true);
+        } else {
+            $estado = !empty($productosPerifericos) ? false : true;
+            $this->crearPedido($em, $perfil, $data['productos'], $estado);
+        }
+
+        return new JsonResponse(['success' => true, 'message' => 'Pedidos registrados con éxito']);
+    }
+
+    private function crearPedido(EntityManagerInterface $em, Perfil $perfil, array $productos, bool $estado): void
+    {
         $pedido = new Pedido();
         $pedido->setFecha(new \DateTime());
-        $pedido->setEstado(false);
+        $pedido->setEstado($estado);
         $pedido->setPagoTotal(0);
         $pedido->setPerfil($perfil);
 
@@ -322,31 +361,80 @@ class PedidoController extends AbstractController
         $em->flush();
 
         $total = 0;
+        $productosComprados = '';
 
-        // Crear las líneas del pedido
-        foreach ($data['productos'] as $productoData) {
+        foreach ($productos as $productoData) {
             $producto = $em->getRepository(Producto::class)->find($productoData['id']);
-            if (!$producto) {
-                return new JsonResponse(['success' => false, 'message' => 'Producto no encontrado'], 404);
-            }
-
             $lineaPedido = new LineaPedido();
             $lineaPedido->setPedido($pedido);
             $lineaPedido->setProducto($producto);
             $lineaPedido->setCantidad($productoData['cantidad']);
-            $lineaPedido->setPrecio($producto->getPrecio());
+            $lineaPedido->setPrecio($producto->getPrecio() * $productoData['cantidad']);
 
             $total += $productoData['cantidad'] * $producto->getPrecio();
+            $productosComprados .= $producto->getNombre() .' '. 'Precio:  ' .$producto->getPrecio().'€ '. ' x '
+                . $productoData['cantidad'] . ' '.' Código:  '. $producto->getCodigoJuego() . "\n";
 
             $em->persist($lineaPedido);
         }
 
         $pedido->setPagoTotal($total);
-
         $em->flush();
 
-        return new JsonResponse(['success' => true, 'message' => 'Pedido registrado con éxito', 'pedidoId' => $pedido->getId()]);
-    }
+        $pdfPath = $this->generarPdfPedido($pedido, $productosComprados, $total);
+
+
+        $email = (new Email())
+            ->from('gameessentialsteam@gmail.com')
+            ->to($perfil->getUsuario()->getCorreo())
+            ->subject('Pedido registrado con éxito')
+            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros'.$pdfPath)
+            ->attachFromPath($pdfPath, 'GamingEssentials Pedido_' . $pedido->getId() . '.pdf');
+
+
+        $mailer = new Mailer(Transport::fromDsn($_ENV['MAILER_DSN']));
+        $mailer->send($email);
+
+        unlink($pdfPath);
+
+    }private function generarPdfPedido(Pedido $pedido, string $productosComprados, float $total): string
+{
+    $options = new Options();
+    $options->set('defaultFont', 'Arial');
+    $dompdf = new Dompdf($options);
+
+    $html = "
+    <h1>Detalle del Pedido</h1>
+    <table>
+        <tr>
+            <td><strong>Pedido ID:</strong></td>
+            <td>{$pedido->getId()}</td>
+        </tr>
+        <tr>
+            <td><strong>Fecha:</strong></td>
+            <td>{$pedido->getFecha()->format('d/m/Y')}</td>
+        </tr>
+        <tr>
+            <td><strong>Productos:</strong></td>
+            <td><pre>{$productosComprados}</pre></td>
+        </tr>
+        <tr>
+            <td><strong>Total:</strong></td>
+            <td>{$total}€</td>
+        </tr>
+    </table>
+    <p>Gracias por confiar en nosotros.</p>
+";
+
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    $pdfPath = sys_get_temp_dir() . '/pedido_' . $pedido->getId() . '.pdf';
+    file_put_contents($pdfPath, $dompdf->output());
+
+    return $pdfPath;
+}
 
 
     #[Route('/totalpedidos', name: 'total_pedidos', methods: ['GET'])]
@@ -356,15 +444,47 @@ class PedidoController extends AbstractController
         $pedidos = $this->pedidoRepository->findAll();
 
         $total = array_reduce($pedidos, function ($carry, $pedido) {
-            return $carry + $pedido->getPagoTotal();
+            return $pedido->getEstado() ? $carry + $pedido->getPagoTotal() : $carry;
         }, 0);
 
-        $data = ['pedidos' => $pedidos, 'total' => $total];
+        $data = [];
+        foreach ($pedidos as $pedido) {
+            $data[] = [
+                'id' => $pedido->getId(),
+                'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
+                'estado' => $pedido->getEstado(),
+                'pagoTotal' => $pedido->getPagoTotal(),
+                //forma guay del david para llegar a fk
+                'username'=>$pedido->getPerfil()->getUsuario()->getUsername()
+            ];
+        }
 
-        // Serializa los pedidos usando el grupo "pedido:read"
-        $jsonPedidos = $serializer->serialize($data, 'json', ['groups' => 'pedido:read']);
+        $response = [
+            'pedidos' => $data,
+            'total' => $total,
+        ];
 
-        return new JsonResponse($jsonPedidos, 200, [], true);
+        return $this->json($response);
+    }
+
+    #[Route('/cambiarEstado/{id}', name: 'cambiar_estado_pedido', methods: ['PUT'])]
+    public function cambiarEstado(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        // Verificar si el usuario tiene el rol ROLE_ADMIN
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        // Buscar el pedido por su ID
+        $pedido = $this->pedidoRepository->find($id);
+
+        if (!$pedido) {
+            return $this->json(['message' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Cambiar el estado del pedido a true
+        $pedido->setEstado(true);
+        $em->flush();
+
+        return $this->json(['message' => 'Estado del pedido cambiado a true'], Response::HTTP_OK);
     }
 
 
