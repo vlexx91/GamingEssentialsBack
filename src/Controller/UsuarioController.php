@@ -270,6 +270,8 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
+        $usuario->setVerificado(true);
+        $usuario->setActivo(true);
         $usuario->setRol('ROLE_ADMIN');
 
         $em->persist($usuario);
@@ -343,6 +345,8 @@ class UsuarioController extends AbstractController
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['correo']);
+        $usuario->setActivo(true);
+        $usuario->setVerificado(true);
         $usuario->setRol('ROLE_GESTOR');
 
         $em->persist($usuario);

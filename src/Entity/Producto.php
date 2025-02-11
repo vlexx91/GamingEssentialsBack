@@ -49,7 +49,12 @@ class Producto
     #[Groups(['producto'])]
     private ?Plataforma $plataforma = null;
 
-    #[Ignore]
+    #[ORM\Column(length: 900)]
+    private ?string $codigo_juego = null;
+
+
+
+//    #[Ignore]
     #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'producto')]
     private Collection $lineaPedidos;
 
@@ -151,5 +156,15 @@ class Producto
     public function setImagen(?string $imagen): void
     {
         $this->imagen = $imagen;
+    }
+
+    public function getCodigoJuego(): ?string
+    {
+        return $this->codigo_juego;
+    }
+
+    public function setCodigoJuego(?string $codigo_juego): void
+    {
+        $this->codigo_juego = $codigo_juego;
     }
 }

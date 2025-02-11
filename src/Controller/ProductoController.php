@@ -8,6 +8,7 @@ use App\Enum\Plataforma;
 use App\Enum\Categoria;
 use App\Repository\LineaPedidoRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -95,6 +96,8 @@ class ProductoController extends AbstractController
             return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
         }
 
+        $codigoJuego = Uuid::uuid4()->toString();
+
         $producto = new Producto();
         $producto->setNombre($datos['nombre']);
         $producto->setDescripcion($datos['descripcion']);
@@ -102,6 +105,7 @@ class ProductoController extends AbstractController
         $producto->setPlataforma(Plataforma::from($datos['plataforma']));
         $producto->setPrecio(floatval($datos['precio']));
         $producto->setCategoria(Categoria::from($datos['categoria']));
+        $producto->setCodigoJuego($codigoJuego);
         $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
 
         $em->persist($producto);
@@ -221,6 +225,9 @@ class ProductoController extends AbstractController
             return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
         }
 
+        $codigoJuego = Uuid::uuid4()->toString();
+
+
         $producto = new Producto();
         $producto->setNombre($datos['nombre']);
         $producto->setDescripcion($datos['descripcion']);
@@ -228,6 +235,7 @@ class ProductoController extends AbstractController
         $producto->setPlataforma(Plataforma::from($datos['plataforma']));
         $producto->setPrecio(floatval($datos['precio']));
         $producto->setCategoria(Categoria::from($datos['categoria']));
+        $producto->setCodigoJuego($codigoJuego);
         $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
 
         $em->persist($producto);
