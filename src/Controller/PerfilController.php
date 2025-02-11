@@ -145,22 +145,22 @@ class PerfilController extends AbstractController
         $datos = json_decode($request->getContent(), true);
 
         // Validar que los datos requeridos existen antes de asignarlos
-        if (isset($datos['nombre'])) {
+        if (!empty($datos['nombre'])) {
             $perfil->setNombre($datos['nombre']);
         }
-        if (isset($datos['apellidos'])) {
+        if (!empty($datos['apellidos'])) {
             $perfil->setApellido($datos['apellidos']);
         }
-        if (isset($datos['direccion'])) {
+        if (!empty($datos['direccion'])) {
             $perfil->setDireccion($datos['direccion']);
         }
-        if (isset($datos['telefono'])) {
+        if (!empty($datos['telefono'])) {
             $perfil->setTelefono($datos['telefono']);
         }
-        if (isset($datos['dni'])) {
+        if (!empty($datos['dni'])) {
             $perfil->setDni($datos['dni']);
         }
-        if (isset($datos['imagenUrl'])) {
+        if (!empty($datos['imagenUrl'])) {
             $perfil->setImagen($datos['imagenUrl']); // Nuevo campo para la imagen
         }
 
