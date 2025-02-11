@@ -17,6 +17,18 @@ class CrearUsuarioPerfilDTO implements \Symfony\Component\Security\Core\User\Pas
     private ?string $telefono = null;
     private ?string $rol= null;
 
+    private ?string $imagen= null;
+
+    public function getImagen(): ?string
+    {
+        return $this->imagen;
+    }
+
+    public function setImagen(?string $imagen): void
+    {
+        $this->imagen = $imagen;
+    }
+
 
     public function getNombre(): ?string
     {

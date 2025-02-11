@@ -3,7 +3,11 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    session:
+        handler_id: null  # Symfony usará el sistema de sesión predeterminado, que es por archivos
+        cookie_lifetime: 3600  # Tiempo de vida de la cookie de sesión (en segundos)
+        save_path: '%kernel.project_dir%/var/sessions'  # Ubicación donde Symfony guardará las sesiones
+
 
     #esi: true
     #fragments: true

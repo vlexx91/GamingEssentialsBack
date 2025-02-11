@@ -15,6 +15,7 @@ use App\Repository\ProductoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -186,6 +187,77 @@ class PedidoController extends AbstractController
                 ],
             ];
         }
+        // Devolver los pedidos en formato JSON
+        return $this->json($data);
+    }
+
+    //Otro metodo para encontrar los pedidos por perfil(Este es el que se usa en el perfil del cliente)
+
+    #[Route('/perfilpedido', name: 'app_pedido_by_token', methods: ['GET'])]
+    public function findByToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager, PerfilRepository $perfilRepository, PedidoRepository $pedidoRepository): JsonResponse
+    {
+        // Obtener el token del encabezado Authorization
+        $token = $request->headers->get('Authorization');
+        if (!$token) {
+            return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Limpiar el token (eliminar el "Bearer ")
+        $formatToken = str_replace('Bearer ', '', $token);
+
+        // Decodificar el token
+        try {
+            $finalToken = $jwtManager->parse($formatToken);
+            $username = $finalToken['username'] ?? null;
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$username) {
+            return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Buscar el usuario por su username
+        $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Obtener el perfil del usuario
+        $perfil = $perfilRepository->findOneBy(['usuario' => $user->getId()]);
+
+        if (!$perfil) {
+            return new JsonResponse(['message' => 'Profile not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Buscar los pedidos asociados al perfil
+        $pedidos = $pedidoRepository->findBy(['perfil' => $perfil]);
+
+        if (empty($pedidos)) {
+            return new JsonResponse(['message' => 'No orders found for this profile'], Response::HTTP_OK);
+        }
+
+        // Serializar los pedidos con los grupos
+        $data = [];
+        foreach ($pedidos as $pedido) {
+            $data[] = [
+                'id' => $pedido->getId(),
+                'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
+                'estado' => $pedido->getEstado(),
+                'pagoTotal' => $pedido->getPagoTotal(),
+                'perfil' => [
+                    'id' => $pedido->getPerfil()->getId(),
+                    'nombre' => $pedido->getPerfil()->getNombre(),
+                    'apellido' => $pedido->getPerfil()->getApellido(),
+                    'direccion' => $pedido->getPerfil()->getDireccion(),
+                    'dni' => $pedido->getPerfil()->getDni(),
+                    'telefono' => $pedido->getPerfil()->getTelefono(),
+                    'fecha_nacimiento' => $pedido->getPerfil()->getFechaNacimiento()
+                ],
+            ];
+        }
+
         // Devolver los pedidos en formato JSON
         return $this->json($data);
     }

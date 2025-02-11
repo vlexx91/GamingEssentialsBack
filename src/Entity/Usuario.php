@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use phpDocumentor\Reflection\Types\Integer;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Serializer\Attribute\Ignore;
 
 #[ORM\Table(name: 'Usuario', schema: 'gaming_essentials')]
@@ -22,27 +23,37 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups("usuario")]
     private ?int $id = null;
 
-    #[ORM\Column(length: 500)]
-    private ?string $username = null;
 
     #[ORM\Column(length: 500)]
+    #[Groups("usuario")]
+    private ?string $username = null;
+
+
+    #[ORM\Column(length: 500)]
+    #[Groups("usuario")]
     private ?string $password = null;
 
     #[ORM\Column(length: 500)]
+    #[Groups("usuario")]
     private ?string $correo = null;
 
     #[ORM\Column(length: 900)]
+    #[Groups("usuario")]
     private ?string $codigoVerificacion = null;
 
     #[ORM\Column]
+    #[Groups("usuario")]
     private ?bool $verificado = null;
 
     #[ORM\Column]
+    #[Groups("usuario")]
     private ?bool $activo = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups("usuario")]
     private ?string $rol = null;
 
     //ONE TO MANY de perfiles
