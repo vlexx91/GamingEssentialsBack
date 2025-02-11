@@ -164,5 +164,15 @@ class Perfil
         return $this;
     }
 
+    public function getImagen(): ?string
+    {
+        return $this->imagen;
+    }
+
+    public function setImagen(?string $imagen): void
+    {
+        $this->imagen = $imagen;
+    }
+
 
 }
