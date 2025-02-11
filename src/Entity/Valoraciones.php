@@ -14,15 +14,19 @@ class Valoraciones
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups("usuario")]
     private ?int $id = null;
 
     #[ORM\Column(type: 'integer')]
+    #[Groups("usuario")]
     private ?int $estrellas = null;
 
     #[ORM\Column(length: 2000, nullable: true)]
+    #[Groups("usuario")]
     private ?string $comentario = null;
 
     #[ORM\Column]
+    #[Groups("usuario")]
     private ?bool $activado = null;
 
 //    #[Groups('valoraciones')]
