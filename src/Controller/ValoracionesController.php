@@ -14,35 +14,40 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/valoraciones')]
 class ValoracionesController extends AbstractController
 {
    private ValoracionesRepository $valoracionesRepository;
+   private SerializerInterface $serializer;
 
-    public function __construct(ValoracionesRepository $valoracionesRepository)
+    public function __construct(ValoracionesRepository $valoracionesRepository, SerializerInterface $serializer)
     {
          $this->valoracionesRepository = $valoracionesRepository;
+        $this->serializer = $serializer;
     }
     #[Route('', name: 'app_valoraciones' , methods: ['GET'])]
     public function index(): Response
     {
         $valoraciones = $this->valoracionesRepository->findAll();
+        $json = $this->serializer->serialize($valoraciones, 'json', ['groups' => 'usuario']);
 
-        return $this->json($valoraciones);
+        return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
 
     #[Route('/producto/{id}/activadas', name: 'valoraciones_activadas_por_producto', methods: ['GET'])]
     public function obtenerValoracionesActivadasPorProducto(int $id): JsonResponse
     {
-            $valoraciones = $this->valoracionesRepository->findByProducto($id);
+        $valoraciones = $this->valoracionesRepository->findByProducto($id);
 
-            if (empty($valoraciones)) {
-                return $this->json(['message' => 'Producto no encontrado o sin valoraciones activadas'], Response::HTTP_NOT_FOUND);
-            }
+        if (empty($valoraciones)) {
+            return $this->json(['message' => 'Producto no encontrado o sin valoraciones activadas'], Response::HTTP_NOT_FOUND);
+        }
 
-            return $this->json($valoraciones, Response::HTTP_OK);
+        $json = $this->serializer->serialize($valoraciones, 'json', ['groups' => 'usuario']);
 
+        return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
 
     /**
@@ -190,4 +195,6 @@ class ValoracionesController extends AbstractController
 
         return $this->json(['top_5_productos' => $topProductos], Response::HTTP_OK);
     }
+
+
 }
