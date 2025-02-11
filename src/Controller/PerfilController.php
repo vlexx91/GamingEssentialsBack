@@ -106,8 +106,12 @@ class PerfilController extends AbstractController
     //Editar a través del token
 
     #[Route('/editarportoken', name: 'perfil_editar_token', methods: ['PUT'])]
-    public function editByToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $em, PerfilRepository $perfilRepository, UserPasswordHasherInterface $passwordHasher): JsonResponse
-    {
+    public function editByToken(
+        Request $request,
+        JWTTokenManagerInterface $jwtManager,
+        EntityManagerInterface $em,
+        PerfilRepository $perfilRepository
+    ): JsonResponse {
         $token = $request->headers->get('Authorization');
         if (!$token) {
             return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
@@ -140,29 +144,30 @@ class PerfilController extends AbstractController
 
         $datos = json_decode($request->getContent(), true);
 
-        // Actualizar los campos del perfil
-        $perfil->setNombre($datos['nombre']);
-        $perfil->setApellido($datos['apellidos']);
-        $perfil->setDireccion($datos['direccion']);
-        $perfil->setDni($datos['dni']);
-        $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
-        $perfil->setTelefono($datos['telefono']);
-
-        // Actualizar el usuario asociado al perfil
-        $usuario->setUsername($datos['username']);
-        $usuario->setCorreo($datos['email']);
-        $usuario->setRol('ROLE_CLIENTE');
-
-        // Si se proporciona una nueva contraseña, la actualizamos
-        if (!empty($datos['password'])) {
-            $hashedPassword = $passwordHasher->hashPassword($usuario, $datos['password']);
-            $usuario->setPassword($hashedPassword);
+        // Validar que los datos requeridos existen antes de asignarlos
+        if (isset($datos['nombre'])) {
+            $perfil->setNombre($datos['nombre']);
+        }
+        if (isset($datos['apellidos'])) {
+            $perfil->setApellido($datos['apellidos']);
+        }
+        if (isset($datos['direccion'])) {
+            $perfil->setDireccion($datos['direccion']);
+        }
+        if (isset($datos['telefono'])) {
+            $perfil->setTelefono($datos['telefono']);
+        }
+        if (isset($datos['dni'])) {
+            $perfil->setDni($datos['dni']);
+        }
+        if (isset($datos['imagenUrl'])) {
+            $perfil->setImagen($datos['imagenUrl']); // Nuevo campo para la imagen
         }
 
-        // Guardamos los cambios
+        // Guardamos los cambios en la base de datos
         $em->flush();
 
-        return $this->json(['message' => 'Perfil y Usuario actualizados correctamente'], Response::HTTP_OK);
+        return $this->json(['message' => 'Perfil actualizado correctamente'], Response::HTTP_OK);
     }
 
 
