@@ -46,7 +46,7 @@ class Producto
     private ?Categoria $categoria = null;
 
     #[ORM\Column(type: 'integer', enumType: Plataforma::class)]
-    #[Groups(['producto'])]
+    #[Groups(['producto', 'usuario'])]
     private ?Plataforma $plataforma = null;
 
     #[ORM\Column(length: 900)]

@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/valoraciones')]
 class ValoracionesController extends AbstractController
@@ -197,6 +198,7 @@ class ValoracionesController extends AbstractController
     }
 
     #[Route('/desactivar/{id}', name: 'valoraciones_desactivar', methods: ['PUT'])]
+    #[isGranted('ROLE_GESTOR')]
     public function cambiarEstadoValoracion(int $id, EntityManagerInterface $em): JsonResponse
     {
         $valoracion = $em->getRepository(Valoraciones::class)->find($id);
@@ -214,6 +216,7 @@ class ValoracionesController extends AbstractController
     }
 
     #[Route('/gestor/valoraciones', name: 'total_pedidos', methods: ['GET'])]
+    #[isGranted('ROLE_GESTOR')]
     public function verTodosPedidos(SerializerInterface $serializer): JsonResponse {
 
         $valoraciones = $this->valoracionesRepository->findAll();

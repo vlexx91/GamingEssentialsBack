@@ -29,12 +29,12 @@ class Valoraciones
     #[Groups("usuario")]
     private ?bool $activado = null;
 
-//    #[Groups('valoraciones')]
+    #[Groups('usuario')]
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name: "id_usuario",nullable: false)]
     private ?Usuario $usuario = null;
 
-//    #[Groups('valoraciones')]
+    #[Groups('usuario')]
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(name: "id_producto",nullable: false)]
     private ?Producto $producto = null;
