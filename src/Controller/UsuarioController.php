@@ -622,4 +622,50 @@ class UsuarioController extends AbstractController
         return $this->json(['usuarioId' => $usuario->getId()], Response::HTTP_OK);
     }
 
+    #[Route('/listaclientes', name:'obtener_perfiles', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function obtenerPerfiles(UsuarioRepository $usuarioRepository): JsonResponse
+    {
+        $clientes = $usuarioRepository->findBy(['rol'=>'ROLE_CLIENTE']);
+
+        $resultado = [];
+
+        foreach ($clientes as $cliente){
+            $resultado[] = [
+                'id' => $cliente->getId(),
+                'username' => $cliente->getUsername(),
+                'correo' => $cliente->getCorreo(),
+                'rol' => $cliente->getRol(),
+                'activo'=> $cliente->getActivo()
+            ];
+        }
+        return $this->json($resultado, Response::HTTP_OK);
+    }
+
+    #[Route('/cliente/{id}/estado', name: 'desactivar_perfiles', methods:['PATCH'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function desactivarPerfiles(int $id, Request $request, UsuarioRepository $usuarioRepository, EntityManagerInterface $em): JsonResponse
+    {
+        $cliente = $usuarioRepository->find($id);
+
+        if (!$cliente || $cliente->getRol() !== 'ROLE_CLIENTE') {
+            return $this->json(['error' => 'Cliente no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['activo'])) {
+            return $this->json(['error' => 'El campo "activo" es requerido'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $cliente->setActivo($data['activo']);
+        $em->persist($cliente);
+        $em->flush();
+
+        return $this->json([
+            'mensaje' => 'Estado actualizado correctamente',
+            'id' => $cliente->getId(),
+            'activo' => $cliente->getActivo()
+        ], Response::HTTP_OK);
+    }
 }

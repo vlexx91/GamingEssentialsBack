@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/valoraciones')]
 class ValoracionesController extends AbstractController
@@ -27,7 +28,7 @@ class ValoracionesController extends AbstractController
          $this->valoracionesRepository = $valoracionesRepository;
         $this->serializer = $serializer;
     }
-    #[Route('', name: 'app_valoraciones' , methods: ['GET'])]
+    #[Route('/find', name: 'app_valoraciones' , methods: ['GET'])]
     public function index(): Response
     {
         $valoraciones = $this->valoracionesRepository->findAll();
@@ -186,15 +187,73 @@ class ValoracionesController extends AbstractController
             if (count($valoraciones) > 0) {
                 $totalEstrellas = array_sum(array_map(fn($v) => $v->getEstrellas(), $valoraciones));
                 $promedio = $totalEstrellas / count($valoraciones);
-                $promedios[] = ['producto' => $producto->getId(), 'promedio' => $promedio];
+
+                // Agregamos el producto completo en lugar de solo el ID
+                $promedios[] = [
+                    'producto' => [
+                        'id' => $producto->getId(),
+                        'nombre' => $producto->getNombre(),
+                        'precio' => $producto->getPrecio(),
+                        'descripcion' => $producto->getDescripcion(),
+                        'imagen' => $producto->getImagen(),
+                        'categoria' => $producto->getCategoria(),
+                        'disponibilidad' => $producto->isDisponibilidad(),
+                    ],
+                    'promedio' => $promedio
+                ];
             }
         }
 
+        // Ordenar por promedio de valoraciones
         usort($promedios, fn($a, $b) => $b['promedio'] <=> $a['promedio']);
+
+        // Obtener solo los 5 primeros
         $topProductos = array_slice($promedios, 0, 5);
 
-        return $this->json(['top_5_productos' => $topProductos], Response::HTTP_OK);
+        // Solo devolver la parte de 'producto'
+        $topProductosLimpios = array_map(fn($p) => $p['producto'], $topProductos);
+
+        return $this->json(['top_5_productos' => $topProductosLimpios], Response::HTTP_OK);
     }
 
+
+    #[Route('/desactivar/{id}', name: 'valoraciones_desactivar', methods: ['PUT'])]
+    #[isGranted('ROLE_GESTOR')]
+    public function cambiarEstadoValoracion(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $valoracion = $em->getRepository(Valoraciones::class)->find($id);
+
+        if (!$valoracion) {
+            return $this->json(['message' => 'Valoración no encontrada'], Response::HTTP_NOT_FOUND);
+        }
+
+        $nuevoEstado = !$valoracion->getActivado();
+        $valoracion->setActivado($nuevoEstado);
+        $em->flush();
+
+        $mensaje = $nuevoEstado ? 'Valoración activada correctamente' : 'Valoración desactivada correctamente';
+        return $this->json(['message' => $mensaje], Response::HTTP_OK);
+    }
+
+    #[Route('/gestor/valoraciones', name: 'total_pedidos', methods: ['GET'])]
+    #[isGranted('ROLE_GESTOR')]
+    public function verTodosPedidos(SerializerInterface $serializer): JsonResponse {
+
+        $valoraciones = $this->valoracionesRepository->findAll();
+
+        $data = [];
+        foreach ($valoraciones as $valoracion) {
+            $data[] = [
+                'id' => $valoracion->getId(),
+                'estrellas' => $valoracion->getEstrellas(),
+                'comentario' => $valoracion->getComentario(),
+                'activado' => $valoracion->getActivado(),
+                'producto' => $valoracion->getProducto()->getNombre(),
+                'username' => $valoracion->getUsuario()->getUsername(),
+                'userActivo' => $valoracion->getUsuario()->getActivo(),
+            ];
+        }
+        return $this->json($data, Response::HTTP_OK);
+    }
 
 }
