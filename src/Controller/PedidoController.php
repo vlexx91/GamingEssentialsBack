@@ -437,7 +437,7 @@ class PedidoController extends AbstractController
 }
 
 
-    #[Route('/totalpedidos', name: 'total_pedidos', methods: ['GET'])]
+    #[Route('/totalpedidos', name: 'total_pedidos1', methods: ['GET'])]
     public function verTodosPedidos(SerializerInterface $serializer): JsonResponse {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
@@ -487,22 +487,4 @@ class PedidoController extends AbstractController
         return $this->json(['message' => 'Estado del pedido cambiado a true'], Response::HTTP_OK);
     }
 
-
-    //ESTE METODO EL ULTIMO SIEMPRE SI NO JODE TO-DO
-    //REPITO
-    //EL ULTIMO SI O SI U OS REVIENTA EL METODO QUE VAYA DELANTE
-    //EL
-    //ULTIMO
-    //S I E M P R E
-    #[Route('/{id}', name: 'app_pedido_findById', methods: ['GET'])]
-    public function findById(int $id): JsonResponse
-    {
-        $pedido = $this->pedidoRepository->find($id);
-
-        if (!$pedido) {
-            return $this->json(['error' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
-        }
-
-        return $this->json($pedido);
-    }
 }
