@@ -232,7 +232,7 @@ class PedidoController extends AbstractController
         }
 
         // Buscar los pedidos asociados al perfil
-        $pedidos = $pedidoRepository->findBy(['perfil' => $perfil]);
+        $pedidos = $pedidoRepository->findBy(['perfil' => $perfil],['fecha' => 'DESC']);
 
         if (empty($pedidos)) {
             return new JsonResponse(['message' => 'No orders found for this profile'], Response::HTTP_OK);
