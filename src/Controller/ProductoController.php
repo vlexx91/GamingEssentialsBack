@@ -44,7 +44,7 @@ class ProductoController extends AbstractController
     #[Route('/cliente', name: 'app_producto_cliente' , methods: ['GET'])]
     public function indexCliente(): Response
     {
-        $productos = $this->productoRepository->findAvailableProducts();
+        $productos = $this->productoRepository->findAll();
         $jsonContent = $this->serializer->serialize($productos, 'json', ['groups' => 'producto']);
 
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
@@ -87,35 +87,36 @@ class ProductoController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/crear', name: 'app_producto_crear', methods: ['POST'])]
-    public function crearProducto(Request $request, EntityManagerInterface $em): JsonResponse
-    {
-        $datos = json_decode($request->getContent(), true);
-
-        if (!isset($datos['nombre'], $datos['descripcion'], $datos['precio'], $datos['categoria'], $datos['plataforma'], $datos['imagen'])) {
-            return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $codigoJuego = Uuid::uuid4()->toString();
-
-        $producto = new Producto();
-        $producto->setNombre($datos['nombre']);
-        $producto->setDescripcion($datos['descripcion']);
-        $producto->setDisponibilidad($datos['disponibilidad'] ?? true);
-        $producto->setPlataforma(Plataforma::from($datos['plataforma']));
-        $producto->setPrecio(floatval($datos['precio']));
-        $producto->setCategoria(Categoria::from($datos['categoria']));
-        $producto->setCodigoJuego($codigoJuego);
-        $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
-
-        $em->persist($producto);
-        $em->flush();
-
-        return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
-    }
+//    #[Route('/crear', name: 'app_producto_crear', methods: ['POST'])]
+//    public function crearProducto(Request $request, EntityManagerInterface $em): JsonResponse
+//    {
+//        $datos = json_decode($request->getContent(), true);
+//
+//        if (!isset($datos['nombre'], $datos['descripcion'], $datos['precio'], $datos['categoria'], $datos['plataforma'], $datos['imagen'])) {
+//            return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
+//        }
+//
+//        $codigoJuego = Uuid::uuid4()->toString();
+//
+//        $producto = new Producto();
+//        $producto->setNombre($datos['nombre']);
+//        $producto->setDescripcion($datos['descripcion']);
+//        $producto->setDisponibilidad($datos['disponibilidad'] ?? true);
+//        $producto->setPlataforma(Plataforma::from($datos['plataforma']));
+//        $producto->setPrecio(floatval($datos['precio']));
+//        $producto->setCategoria(Categoria::from($datos['categoria']));
+//        $producto->setCodigoJuego($codigoJuego);
+//        $producto->setImagen($datos['imagen']);
+//
+//        $em->persist($producto);
+//        $em->flush();
+//
+//        return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
+//    }
 
 
     #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['PUT'])]
+    #[IsGranted('ROLE_GESTOR')]
     public function editarProducto( Request $request, EntityManagerInterface $em, Producto $producto): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
