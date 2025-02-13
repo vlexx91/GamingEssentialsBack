@@ -9,6 +9,7 @@ use App\Entity\Valoraciones;
 use App\Repository\ValoracionesRepository;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -254,6 +255,90 @@ class ValoracionesController extends AbstractController
             ];
         }
         return $this->json($data, Response::HTTP_OK);
+    }
+
+    #[Route('/mis-valoraciones', name: 'app_valoraciones_by_token', methods: ['GET'])]
+    public function getValoracionesByToken(
+        Request $request,
+        JWTTokenManagerInterface $jwtManager,
+        EntityManagerInterface $entityManager,
+        ValoracionesRepository $valoracionesRepository
+    ): JsonResponse {
+        $token = $request->headers->get('Authorization');
+        if (!$token) {
+            return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+
+        try {
+            $finalToken = $jwtManager->parse($formatToken);
+            $username = $finalToken['username'] ?? null;
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$username) {
+            return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $valoraciones = $valoracionesRepository->findBy(
+            ['usuario' => $user],
+            ['id' => 'DESC'] // Ordenar de la más reciente a la más antigua
+        );
+
+        if (empty($valoraciones)) {
+            return new JsonResponse(['message' => 'No ratings found for this user'], Response::HTTP_OK);
+        }
+
+        $data = [];
+        foreach ($valoraciones as $valoracion) {
+
+            if (!$valoracion->getActivado()) {
+                continue;
+            }
+
+            $data[] = [
+                'id' => $valoracion->getId(),
+                'estrellas' => $valoracion->getEstrellas(),
+                'comentario' => $valoracion->getComentario(),
+                'activado' => $valoracion->getActivado(),
+                'producto' => [
+                    'id' => $valoracion->getProducto()->getId(),
+                    'nombre' => $valoracion->getProducto()->getNombre(),
+                    'descripcion' => $valoracion->getProducto()->getDescripcion(),
+                    'imagen' => $valoracion->getProducto()->getImagen(),
+                    'precio' => $valoracion->getProducto()->getPrecio(),
+                ],
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/{id}/desactivar', name: 'app_desactivar_valoracion', methods: ['PATCH'])]
+    public function desactivarValoracion(
+        int $id,
+        EntityManagerInterface $entityManager,
+        ValoracionesRepository $valoracionesRepository
+    ): JsonResponse {
+        $valoracion = $valoracionesRepository->find($id);
+
+        if (!$valoracion) {
+            return new JsonResponse(['message' => 'Valoración no encontrada'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Cambiar el estado de la valoración a desactivado
+        $valoracion->setActivado(false);
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'Valoración desactivada con éxito'], Response::HTTP_OK);
     }
 
 }
