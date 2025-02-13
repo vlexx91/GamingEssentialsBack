@@ -262,6 +262,37 @@ class PedidoController extends AbstractController
         return $this->json($data);
     }
 
+    #[Route('/{id}/lineas', name: 'pedido_lineas', methods: ['GET'])]
+    public function obtenerLineasDePedido(int $id, PedidoRepository $pedidoRepository): JsonResponse
+    {
+        $pedido = $pedidoRepository->find($id);
+
+        if (!$pedido) {
+            return new JsonResponse(['message' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Obtener las líneas de pedido asociadas
+        $lineasPedido = $pedido->getLineaPedidos();
+        $lineasPedidoArray = [];
+
+        foreach ($lineasPedido as $linea) {
+            $producto = $linea->getProducto();
+            $lineasPedidoArray[] = [
+                'id' => $linea->getId(),
+                'cantidad' => $linea->getCantidad(),
+                'precio' => $linea->getPrecio(),
+                'producto' => [
+                    'id' => $producto->getId(),
+                    'nombre' => $producto->getNombre(),
+                    'imagen' => $producto->getImagen(),
+                    'precio' => $producto->getPrecio(),
+                ]
+            ];
+        }
+
+        return new JsonResponse($lineasPedidoArray, Response::HTTP_OK);
+    }
+
     //POR REALIZAR
 //    #[Route('/realizar', name: 'realizar_pedido', methods: ['POST'])]
 //    public function realizarPedido(Request $request): JsonResponse
