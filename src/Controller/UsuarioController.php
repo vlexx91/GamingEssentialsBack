@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -640,6 +641,38 @@ class UsuarioController extends AbstractController
             ];
         }
         return $this->json($resultado, Response::HTTP_OK);
+    }
+
+    #[Route('/verificar-password', name: 'verificar_password', methods: ['POST'])]
+    public function verificarPassword(Request $request, UserPasswordHasherInterface $passwordHasher, Security $security): JsonResponse {
+        $datos = json_decode($request->getContent(), true);
+        $usuario = $security->getUser();
+
+        if (!$usuario || !$passwordHasher->isPasswordValid($usuario, $datos['password'])) {
+            return $this->json(['valid' => false], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return $this->json(['valid' => true], Response::HTTP_OK);
+    }
+
+    #[Route('/cambiar-password', name: 'cambiar_password', methods: ['POST'])]
+    public function cambiarPassword(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, Security $security): JsonResponse {
+        $datos = json_decode($request->getContent(), true);
+        $usuario = $security->getUser();
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no autenticado'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if (strlen($datos['nuevaPassword']) < 8) {
+            return $this->json(['message' => 'La nueva contraseña debe tener al menos 8 caracteres'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $usuario->setPassword($passwordHasher->hashPassword($usuario, $datos['nuevaPassword']));
+        $em->persist($usuario);
+        $em->flush();
+
+        return $this->json(['message' => 'Contraseña cambiada con éxito'], Response::HTTP_OK);
     }
 
     #[Route('/cliente/{id}/estado', name: 'desactivar_perfiles', methods:['PATCH'])]
