@@ -9,6 +9,7 @@ use App\Entity\Perfil;
 use App\Entity\Producto;
 use App\Entity\Usuario;
 use App\Enum\Categoria;
+use App\Repository\LineaPedidoRepository;
 use App\Repository\PedidoRepository;
 use App\Repository\PerfilRepository;
 use App\Repository\ProductoRepository;
@@ -32,10 +33,14 @@ class PedidoController extends AbstractController
     private PedidoRepository $pedidoRepository;
     private EntityManagerInterface $em;
     private PerfilRepository $perfilRepository;
+
+
     private ProductoRepository $productoRepository;
 
     public function __construct(PedidoRepository $pedidoRepository, EntityManagerInterface $em, PerfilRepository $perfilRepository,ProductoRepository $productoRepository)
     {
+        date_default_timezone_set('Europe/Madrid'); // Set the timezone
+
         $this->pedidoRepository = $pedidoRepository;
         $this->em = $em;
         $this->perfilRepository = $perfilRepository;
@@ -403,7 +408,7 @@ class PedidoController extends AbstractController
             $lineaPedido->setPrecio($producto->getPrecio() * $productoData['cantidad']);
 
             $total += $productoData['cantidad'] * $producto->getPrecio();
-            $productosComprados .= $producto->getNombre() .' '. 'Precio:  ' .$producto->getPrecio().'€ '. ' x '
+            $productosComprados .= '- '. $producto->getNombre() .' '. 'Precio:  ' .$producto->getPrecio().'€ '. ' x '
                 . $productoData['cantidad'] . ' '.' Código:  '. $producto->getCodigoJuego() . "\n";
 
             $em->persist($lineaPedido);
@@ -435,27 +440,61 @@ class PedidoController extends AbstractController
     $dompdf = new Dompdf($options);
 
     $html = "
+   <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        th {
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        th:nth-child(3), td:nth-child(3) {
+            width: 50%;
+        }
+        .total {
+            font-weight: bold;
+            color: #d9534f;
+        }
+        .footer {
+            margin-top: 20px;
+            font-style: italic;
+        }
+    </style>
     <h1>Detalle del Pedido</h1>
     <table>
         <tr>
-            <td><strong>Pedido ID:</strong></td>
+            <th><strong>Pedido ID</strong></th>
+            <th><strong>Fecha</strong></th>
+            <th><strong>Productos</strong></th>
+            <th class='total'><strong>Total</strong></th>
+        </tr>
+        <tr>
             <td>{$pedido->getId()}</td>
-        </tr>
-        <tr>
-            <td><strong>Fecha:</strong></td>
             <td>{$pedido->getFecha()->format('d/m/Y')}</td>
-        </tr>
-        <tr>
-            <td><strong>Productos:</strong></td>
-            <td><pre>{$productosComprados}</pre></td>
-        </tr>
-        <tr>
-            <td><strong>Total:</strong></td>
-            <td>{$total}€</td>
+            <td><pre style='white-space: pre-wrap;'><strong>{$productosComprados}</strong></pre></td>
+            <td class='total'>{$total}€</td>
         </tr>
     </table>
-    <p>Gracias por confiar en nosotros.</p>
-";
+    <p class='footer'>Gracias por confiar en nosotros.</p>
+    ";
+
 
     $dompdf->loadHtml($html);
     $dompdf->setPaper('A4', 'portrait');
@@ -499,7 +538,7 @@ class PedidoController extends AbstractController
     }
 
     #[Route('/cambiarEstado/{id}', name: 'cambiar_estado_pedido', methods: ['PUT'])]
-    public function cambiarEstado(int $id, EntityManagerInterface $em): JsonResponse
+    public function cambiarEstado(int $id, EntityManagerInterface $em, LineaPedidoRepository $lineaPedidoRepository): JsonResponse
     {
         // Verificar si el usuario tiene el rol ROLE_ADMIN
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
@@ -515,7 +554,28 @@ class PedidoController extends AbstractController
         $pedido->setEstado(true);
         $em->flush();
 
-        return $this->json(['message' => 'Estado del pedido cambiado a true'], Response::HTTP_OK);
+
+        $productos = $pedido->getLineaPedidos();
+        $nombresProductos = [];
+        foreach ($productos as $lineaPedido) {
+            $nombresProductos[] = $lineaPedido->getProducto()->getNombre();
+        }
+        $nombresProductosStr = implode(', ', $nombresProductos);
+
+        $perfil= $pedido->getPerfil();
+        $transport = Transport::fromDsn($_ENV['MAILER_DSN']);
+        $mailer = new Mailer($transport);
+
+        $email= (new Email())
+            ->from('gameessentialsteam@gmail.com')
+            ->to($perfil->getUsuario()->getCorreo())
+            ->subject('Estado del pedido actualizado')
+            ->text('Su pedido con ID '. $pedido->getId(). ', '. 'que contiene: '.$nombresProductosStr . ', le llegará en los proximos dias.');
+
+
+        $mailer->send($email);
+
+        return $this->json(['message' => 'Estado del pedido cambiado y correo enviado'], Response::HTTP_OK);
     }
 
 }
