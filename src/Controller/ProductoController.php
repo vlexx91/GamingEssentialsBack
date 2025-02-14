@@ -184,14 +184,14 @@ class ProductoController extends AbstractController
 
         // Si hay menos de 10 productos, se devuelven todos
         $totalProductos = count($productos);
-        if ($totalProductos <= 10) {
+        if ($totalProductos <= 15) {
             $productosAleatorios = $productos;
         } else {
             $productosAleatorios = [];
             $indicesSeleccionados = [];
 
             // Seleccionamos 10 índices aleatorios sin repetición
-            while (count($productosAleatorios) < 10) {
+            while (count($productosAleatorios) < 15) {
                 $indice = random_int(0, $totalProductos - 1);
                 if (!in_array($indice, $indicesSeleccionados)) {
                     $indicesSeleccionados[] = $indice;
