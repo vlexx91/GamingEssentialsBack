@@ -701,4 +701,91 @@ class UsuarioController extends AbstractController
             'activo' => $cliente->getActivo()
         ], Response::HTTP_OK);
     }
+
+
+    #[Route('/recuperar-password', name: 'recuperar_password', methods: ['POST'])]
+    public function recuperarPassword(Request $request,EntityManagerInterface $em): JsonResponse
+    {
+
+        $transport = Transport::fromDsn($_ENV['MAILER_DSN']);
+        $mailer = new Mailer($transport);
+
+        $datos = json_decode($request->getContent(), true);
+        $usuario = $em->getRepository(Usuario::class)->findOneBy(['correo' => $datos['correo']]);
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Correo no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        $codigo = random_int(100000, 999999); // Generate a 6-digit code
+        $usuario->setCodigoVerificacion($codigo);
+        $em->flush();
+
+        $email = (new Email())
+            ->from('gameessentialsteam@gmail.com')
+            ->to($usuario->getCorreo())
+            ->subject('Recuperación de contraseña')
+            ->text('Para restablecer su contraseña, use el siguiente código: ' . $codigo);
+
+        $mailer->send($email);
+
+        return $this->json(['message' => 'Correo de recuperación enviado'], Response::HTTP_OK);
+    }
+
+
+    #[Route('/reset-password', name: 'reset_password', methods: ['POST'])]
+    public function resetPassword(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    {
+        $datos = json_decode($request->getContent(), true);
+        $usuario = $em->getRepository(Usuario::class)->findOneBy(['codigoVerificacion' => $datos['codigo']]);
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Código inválido'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $newPassword = $datos['newPassword'];
+
+        if (strlen($newPassword) < 8) {
+            return $this->json(['message' => 'La nueva contraseña debe tener al menos 8 caracteres'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $usuario->setPassword($passwordHasher->hashPassword($usuario, $newPassword));
+        $usuario->setCodigoVerificacion(null); // Clear the code after resetting the password
+        $em->flush();
+
+        return $this->json(['message' => 'Contraseña restablecida con éxito'], Response::HTTP_OK);
+    }
+
+
+    #[Route('/perfil/imagen', name: 'obtener_imagen_perfil', methods: ['GET'])]
+    public function obtenerImagenPerfil(Request $request, JWTTokenManagerInterface $jwtManager, UsuarioRepository $usuarioRepository, PerfilRepository $perfilRepository): JsonResponse
+    {
+        $token = $request->headers->get('authorization');
+        if (!$token) {
+            return $this->json(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+        $finalToken = $jwtManager->parse($formatToken);
+
+        $username = $finalToken['username'] ?? null;
+        if (!$username) {
+            return $this->json(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        $usuario = $usuarioRepository->findOneBy(['username' => $username]);
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        $perfil = $perfilRepository->findOneBy(['usuario' => $usuario]);
+
+        if (!$perfil) {
+            return $this->json(['message' => 'Perfil no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json(['imagen' => $perfil->getImagen()], Response::HTTP_OK);
+    }
+
 }

@@ -424,7 +424,7 @@ class PedidoController extends AbstractController
             ->from('gameessentialsteam@gmail.com')
             ->to($perfil->getUsuario()->getCorreo())
             ->subject('Pedido registrado con éxito')
-            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros'.$pdfPath)
+            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros')
             ->attachFromPath($pdfPath, 'GamingEssentials Pedido_' . $pedido->getId() . '.pdf');
 
 
