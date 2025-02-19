@@ -32,7 +32,7 @@ create table producto(
 	imagen varchar(900) not null,
 	precio float not null,
 	categoria int not null,
-    codigo_juego varchar(900) not null,
+    codigo_juego varchar(900) not null
 );
 
 create table valoraciones(
