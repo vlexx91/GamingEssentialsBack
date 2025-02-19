@@ -757,4 +757,35 @@ class UsuarioController extends AbstractController
     }
 
 
+    #[Route('/perfil/imagen', name: 'obtener_imagen_perfil', methods: ['GET'])]
+    public function obtenerImagenPerfil(Request $request, JWTTokenManagerInterface $jwtManager, UsuarioRepository $usuarioRepository, PerfilRepository $perfilRepository): JsonResponse
+    {
+        $token = $request->headers->get('authorization');
+        if (!$token) {
+            return $this->json(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+        $finalToken = $jwtManager->parse($formatToken);
+
+        $username = $finalToken['username'] ?? null;
+        if (!$username) {
+            return $this->json(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        $usuario = $usuarioRepository->findOneBy(['username' => $username]);
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        $perfil = $perfilRepository->findOneBy(['usuario' => $usuario]);
+
+        if (!$perfil) {
+            return $this->json(['message' => 'Perfil no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json(['imagen' => $perfil->getImagen()], Response::HTTP_OK);
+    }
+
 }
