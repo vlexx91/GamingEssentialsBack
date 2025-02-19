@@ -74,6 +74,17 @@ class ValoracionesController extends AbstractController
             return $this->json(['message' => 'Usuario o Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
+        $existingReview = $em->getRepository(Valoraciones::class)->findOneBy([
+            'usuario' => $usuario,
+            'producto' => $producto
+        ]);
+
+        if ($existingReview && $existingReview->getActivado()) {
+            return $this->json(['message' => 'Ya has valorado este producto'], Response::HTTP_CONFLICT);
+        }
+
+
+
         $valoracion = new Valoraciones();
         $valoracion->setEstrellas($datos['estrellas']);
         $valoracion->setComentario($datos['comentario']);
@@ -86,6 +97,8 @@ class ValoracionesController extends AbstractController
 
         return $this->json(['message' => 'Valoración creada correctamente'], Response::HTTP_CREATED);
     }
+
+
 
     /**
      * @param int $id
