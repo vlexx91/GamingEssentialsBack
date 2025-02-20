@@ -91,6 +91,7 @@ class ValoracionesController extends AbstractController
         $valoracion->setActivado(true);
         $valoracion->setUsuario($usuario);
         $valoracion->setProducto($producto);
+        $valoracion->setFecha(new \DateTime());
 
         $em->persist($valoracion);
         $em->flush();
