@@ -68,3 +68,14 @@ create table linea_pedido(
 	constraint fk_linea_pedido_pedido foreign key(id_pedido) references pedido(id)
 );
 
+
+create table lista_deseos (
+    id serial primary key not null,
+    id_usuario int not null,
+    id_producto int not null,
+    notificacion boolean default false,
+    fecha_agregado timestamp default current_timestamp,
+    constraint fk_lista_deseos_usuario foreign key (id_usuario) references usuario(id) on delete cascade,
+    constraint fk_lista_deseos_producto foreign key (id_producto) references producto(id) on delete cascade,
+    unique (id_usuario, id_producto)
+);
