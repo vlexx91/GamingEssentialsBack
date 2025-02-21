@@ -35,6 +35,17 @@ create table producto(
     codigo_juego varchar(900) not null,
 );
 
+CREATE TABLE lista_deseos (
+    id SERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_producto INT NOT NULL,
+    fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_lista_deseos_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE,
+    CONSTRAINT fk_lista_deseos_producto FOREIGN KEY (id_producto) REFERENCES producto(id) ON DELETE CASCADE,
+    UNIQUE (id_usuario, id_producto)
+);
+
+
 create table valoraciones(
 	id serial primary key not null,
 	estrellas int not null,
