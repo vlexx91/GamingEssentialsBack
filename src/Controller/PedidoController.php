@@ -401,17 +401,19 @@ class PedidoController extends AbstractController
 
         foreach ($productos as $productoData) {
             $producto = $em->getRepository(Producto::class)->find($productoData['id']);
-            $lineaPedido = new LineaPedido();
-            $lineaPedido->setPedido($pedido);
-            $lineaPedido->setProducto($producto);
-            $lineaPedido->setCantidad($productoData['cantidad']);
-            $lineaPedido->setPrecio($producto->getPrecio() * $productoData['cantidad']);
+            for($i = 0; $i < $productoData['cantidad']; $i++){
+                $lineaPedido = new LineaPedido();
+                $lineaPedido->setPedido($pedido);
+                $lineaPedido->setProducto($producto);
+                $lineaPedido->setCantidad(1);
+                $lineaPedido->setPrecio($producto->getPrecio());
 
-            $total += $productoData['cantidad'] * $producto->getPrecio();
-            $productosComprados .= '- '. $producto->getNombre() .' '. 'Precio:  ' .$producto->getPrecio().'€ '. ' x '
-                . $productoData['cantidad'] . ' '.' Código:  '. $producto->getCodigoJuego() . "\n";
+            $total += $producto->getPrecio();
+            $codigoJuego = $producto->getCodigoJuego() . '-' . uniqid();
+            $productosComprados .= '- ' . $producto->getNombre() . ' ' . 'Precio:  ' . $producto->getPrecio() . '€ ' . ' Código:  ' . $codigoJuego . "\n";
 
             $em->persist($lineaPedido);
+            }
         }
 
         $pedido->setPagoTotal($total);
