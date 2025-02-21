@@ -35,10 +35,13 @@ class MailerController extends AbstractController
 
 //        $user = $this->getUser();
 //        $to = $user ? $user->getEmail() : null;
+        if (!$this->getUser()) {
+            return new Response("Acceso no autorizado", Response::HTTP_UNAUTHORIZED);
+        }
 
         $data = json_decode($request->getContent(), true);
-        $to = $data['to'] ?? null;
-        $subject = $data['subject'] ?? null;
+        $to = $data['to'] ?? 'gameessentialsteam@gmail.com';
+        $subject = $data['subject'] ?? 'Consulta Chatbox';
         $text = $data['text'] ?? null;
 //        $subject = $request->request->get('subject');
 //        $text = $request->request->get('text');
@@ -60,9 +63,19 @@ class MailerController extends AbstractController
 
         try {
             $mailer->send($email);
-            return new Response("Correo enviado correctamente.");
+
+            return new JsonResponse(
+                ["message" => "Correo enviado correctamente."],
+                Response::HTTP_OK,
+                ['Content-Type' => 'application/json']
+            );
         } catch (\Exception $e) {
-            return new Response("Error al enviar el correo: " . $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+
+            return new JsonResponse(
+                ["error" => "Error al enviar el correo: " . $e->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR,
+                ['Content-Type' => 'application/json']
+            );
         }
     }
 

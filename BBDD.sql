@@ -33,6 +33,7 @@ create table producto(
 	precio float not null,
 	categoria int not null,
     codigo_juego varchar(900) not null,
+    descuento float
 );
 
 CREATE TABLE lista_deseos (

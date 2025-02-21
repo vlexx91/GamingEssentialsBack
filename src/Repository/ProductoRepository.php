@@ -63,9 +63,9 @@ class ProductoRepository extends ServiceEntityRepository
 
     public function findByCriteria(array $criterios)
     {
-        $qb = $this->createQueryBuilder('p')
-            ->andWhere('p.disponibilidad = :val')
-            ->setParameter('val', true);
+        $qb = $this->createQueryBuilder('p');
+//            ->andWhere('p.disponibilidad = :val')
+//            ->setParameter('val', true);
 
         if (!empty($criterios['nombre'])) {
             $qb->andWhere('LOWER(p.nombre) LIKE LOWER(:nombre)')
