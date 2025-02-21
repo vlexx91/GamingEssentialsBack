@@ -52,6 +52,7 @@ create table valoraciones(
 	estrellas int not null,
 	comentario varchar(2000),
     activado boolean not null,
+    fecha timestamp default CURRENT_TIMESTAMP,
 	id_usuario int not null,
 	id_producto int not null,
     constraint fk_valoraciones_usuario foreign key (id_usuario) references usuario(id),
