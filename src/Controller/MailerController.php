@@ -54,7 +54,7 @@ class MailerController extends AbstractController
         }
 
         // Incluir el correo del usuario en el mensaje
-        $text .= "\n\nCorreo del cliente: " . $userEmail . "\n\nNombre del cliente: " . $userName;
+        $text .= "\n\nCorreo del cliente: " . $userEmail . "\n\nUsername del cliente: " . $userName;
 
         $transport = Transport::fromDsn('smtp://gameessentialsteam@gmail.com:fupzrvwiatrfmrke@smtp.gmail.com:587');
         $mailer = new Mailer($transport);
