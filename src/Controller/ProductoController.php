@@ -7,6 +7,7 @@ use App\Entity\Usuario;
 use App\Enum\Plataforma;
 use App\Enum\Categoria;
 use App\Repository\LineaPedidoRepository;
+use App\Repository\ListaDeseosRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -117,13 +118,15 @@ class ProductoController extends AbstractController
 
     #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['PUT'])]
     #[IsGranted('ROLE_GESTOR')]
-    public function editarProducto( Request $request, EntityManagerInterface $em, Producto $producto): JsonResponse
+    public function editarProducto( Request $request, EntityManagerInterface $em, Producto $producto, ListaDeseosRepository $listaDeseosRepository): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
 
         if (!$producto) {
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
+
+        $disponibilidadAnterior = $producto->isDisponibilidad();
 
         // Actualizar los campos del producto
         if (isset($datos['nombre'])) {
@@ -152,7 +155,38 @@ class ProductoController extends AbstractController
 //        $em->persist($producto);
         $em->flush();
 
+        if (!$disponibilidadAnterior && $producto->isDisponibilidad()) {
+            $usuariosInteresados = $listaDeseosRepository->findUsuariosPorProducto($producto->getId());
+
+            foreach ($usuariosInteresados as $usuario) {
+                $this->enviarNotificacion($usuario, $producto);
+            }
+        }
+
         return $this->json(['message' => 'Producto editado correctamente'], Response::HTTP_OK);
+
+    }
+
+    private function enviarNotificacion($usuario, $producto)
+    {
+        $httpClient = HttpClient::create();
+
+        try {
+            $response = $httpClient->request('POST', 'http://127.0.0.1:8000/send-product-notification', [
+                'json' => [
+                    'email' => $usuario->getCorreo(), // Debería ser un array con 'email'
+                    'productName' => $producto->getNombre()
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            if ($statusCode !== 200) {
+                throw new \Exception('Error en la notificación');
+            }
+
+        } catch (\Exception $e) {
+            error_log("Error enviando notificación a {$usuario->getCorreo()}: " . $e->getMessage());
+        }
     }
 
     #[Route('/eliminar/{id}', name: 'app_producto_eliminar', methods: ['DELETE'])]

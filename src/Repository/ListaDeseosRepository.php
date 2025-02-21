@@ -40,4 +40,16 @@ class ListaDeseosRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    public function findUsuariosPorProducto(int $productoId): array
+    {
+        return $this->createQueryBuilder('ld')
+            ->innerJoin('ld.usuario', 'u') // Usa el nombre correcto de la relación en la entidad
+            ->select('u.correo') // Solo necesitamos los emails
+            ->where('ld.producto = :productoId') // Usa el nombre correcto de la relación con Producto
+            ->setParameter('productoId', $productoId)
+            ->getQuery()
+            ->getResult();
+
+    }
 }
