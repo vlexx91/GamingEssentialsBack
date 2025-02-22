@@ -85,33 +85,33 @@ class MailerController extends AbstractController
         }
     }
 
-    #[Route("/send-product-notification", name: "send_product_notification", methods: ["POST"])]
-    public function sendProductNotification(Request $request): Response
-    {
-        $data = json_decode($request->getContent(), true);
-
-        $userEmail = $data['email'] ?? null;
-        $productName = $data['productName'] ?? null;
-
-        if (!$userEmail || !$productName) {
-            return new JsonResponse(["error" => "Faltan parámetros."], Response::HTTP_BAD_REQUEST);
-        }
-
-        $transport = Transport::fromDsn('smtp://gameessentialsteam@gmail.com:fupzrvwiatrfmrke@smtp.gmail.com:587');
-        $mailer = new Mailer($transport);
-
-        $email = (new Email())
-            ->from('gameessentialsteam@gmail.com')
-            ->to($userEmail)
-            ->subject("¡{$productName} está disponible!")
-            ->html("<p>Hola,</p><p>El producto <strong>{$productName}</strong> ya está disponible en nuestra tienda.</p><p>¡Corre a comprarlo!</p>");
-
-        try {
-            $mailer->send($email);
-            return new JsonResponse(["message" => "Notificación enviada a $userEmail"], Response::HTTP_OK);
-        } catch (\Exception $e) {
-            return new JsonResponse(["error" => "Error al enviar el correo: " . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
+//    #[Route("/send-product-notification", name: "send_product_notification", methods: ["POST"])]
+//    public function sendProductNotification(Request $request): Response
+//    {
+//        $data = json_decode($request->getContent(), true);
+//
+//        $userEmail = $data['email'] ?? null;
+//        $productName = $data['productName'] ?? null;
+//
+//        if (!$userEmail || !$productName) {
+//            return new JsonResponse(["error" => "Faltan parámetros."], Response::HTTP_BAD_REQUEST);
+//        }
+//
+//        $transport = Transport::fromDsn('smtp://gameessentialsteam@gmail.com:fupzrvwiatrfmrke@smtp.gmail.com:587');
+//        $mailer = new Mailer($transport);
+//
+//        $email = (new Email())
+//            ->from('gameessentialsteam@gmail.com')
+//            ->to($userEmail)
+//            ->subject("¡{$productName} está disponible!")
+//            ->html("<p>Hola,</p><p>El producto <strong>{$productName}</strong> ya está disponible en nuestra tienda.</p><p>¡Corre a comprarlo!</p>");
+//
+//        try {
+//            $mailer->send($email);
+//            return new JsonResponse(["message" => "Notificación enviada a $userEmail"], Response::HTTP_OK);
+//        } catch (\Exception $e) {
+//            return new JsonResponse(["error" => "Error al enviar el correo: " . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
 }
