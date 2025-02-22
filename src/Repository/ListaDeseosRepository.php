@@ -15,41 +15,44 @@ class ListaDeseosRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, ListaDeseos::class);
     }
+//
+//        /**
+//         * @return ListaDeseos[] Returns an array of ListaDeseos objects
+//         */
+//        public function findByExampleField($value): array
+//        {
+//            return $this->createQueryBuilder('l')
+//                ->andWhere('l.exampleField = :val')
+//                ->setParameter('val', $value)
+//                ->orderBy('l.id', 'ASC')
+//                ->setMaxResults(10)
+//                ->getQuery()
+//                ->getResult()
+//            ;
+//        }
+//
+//        public function findOneBySomeField($value): ?ListaDeseos
+//        {
+//            return $this->createQueryBuilder('l')
+//                ->andWhere('l.exampleField = :val')
+//                ->setParameter('val', $value)
+//                ->getQuery()
+//                ->getOneOrNullResult()
+//            ;
+//        }
 
-    //    /**
-    //     * @return ListaDeseos[] Returns an array of ListaDeseos objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('l')
-    //            ->andWhere('l.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('l.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?ListaDeseos
-    //    {
-    //        return $this->createQueryBuilder('l')
-    //            ->andWhere('l.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    // src/Repository/ListaDeseosRepository.php
 
     public function findUsuariosPorProducto(int $productoId): array
     {
         return $this->createQueryBuilder('ld')
-            ->innerJoin('ld.usuario', 'u') // Usa el nombre correcto de la relación en la entidad
-            ->select('u.correo') // Solo necesitamos los emails
-            ->where('ld.producto = :productoId') // Usa el nombre correcto de la relación con Producto
+            ->select('ld, u')
+            ->innerJoin('ld.usuario', 'u')
+            ->where('ld.producto = :productoId')
             ->setParameter('productoId', $productoId)
             ->getQuery()
             ->getResult();
-
     }
+
+
 }
