@@ -18,8 +18,6 @@ use Symfony\Component\Serializer\Attribute\Ignore;
 class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
 {
 
-
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -60,8 +58,50 @@ class Usuario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToOne(targetEntity: Perfil::class, mappedBy: 'usuario', cascade: ['persist', 'remove'])]
     private ?Perfil $perfil;
 
+    #[ORM\OneToMany(targetEntity: ListaDeseos::class, mappedBy: 'usuario')]
+    private Collection $listaDeseos;
 
 
+    public function __construct()
+    {
+        $this->listaDeseos = new ArrayCollection();
+    }
+
+    public function getListaDeseos(): Collection
+    {
+        return $this->listaDeseos;
+    }
+
+    public function addListaDeseo(ListaDeseos $listaDeseo): self
+    {
+        if (!$this->listaDeseos->contains($listaDeseo)) {
+            $this->listaDeseos[] = $listaDeseo;
+            $listaDeseo->setUsuario($this);
+        }
+
+        return $this;
+    }
+
+    public function removeListaDeseo(ListaDeseos $listaDeseo): self
+    {
+        if ($this->listaDeseos->removeElement($listaDeseo)) {
+            if ($listaDeseo->getUsuario() === $this) {
+                $listaDeseo->setUsuario(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getPerfil(): ?Perfil
+    {
+        return $this->perfil;
+    }
+
+    public function setPerfil(?Perfil $perfil): void
+    {
+        $this->perfil = $perfil;
+    }
 
 
     public function getId(): ?int
