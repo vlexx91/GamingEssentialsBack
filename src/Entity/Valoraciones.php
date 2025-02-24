@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ValoracionesRepository;
+use DateTimeInterface;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -28,6 +30,10 @@ class Valoraciones
     #[ORM\Column]
     #[Groups("usuario")]
     private ?bool $activado = null;
+
+    #[Groups(["usuario"])]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?DateTimeInterface $fecha = null;
 
     #[Groups('usuario')]
     #[ORM\ManyToOne]
@@ -103,5 +109,17 @@ class Valoraciones
     public function setActivado(?bool $activado): void
     {
         $this->activado = $activado;
+    }
+
+    public function getFecha(): ?DateTimeInterface
+    {
+        return $this->fecha;
+    }
+
+    public function setFecha(DateTimeInterface $fecha): static
+    {
+        $this->fecha = $fecha;
+
+        return $this;
     }
 }
