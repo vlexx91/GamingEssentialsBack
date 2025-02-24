@@ -246,6 +246,46 @@ class ProductoController extends AbstractController
 
     }
 
+    // src/Controller/ProductoController.php
+
+    #[Route('/gestor/descuento/{id}', name: 'app_producto_descuento', methods: ['PUT'])]
+    #[IsGranted('ROLE_GESTOR')]
+    public function crearDescuento(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $producto = $this->productoRepository->find($id);
+
+        if (!$producto) {
+            return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        $datos = json_decode($request->getContent(), true);
+
+        if (!isset($datos['descuento']) || !is_numeric($datos['descuento'])) {
+            return $this->json(['message' => 'El descuento debe ser un número válido'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $descuento = floatval($datos['descuento']);
+
+        if ($descuento < 0 || $descuento > 100) {
+            return $this->json(['message' => 'El descuento debe estar entre 0 y 100'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($producto->getDescuento() === $descuento) {
+            return $this->json(['message' => 'El producto ya tiene este descuento aplicado'], Response::HTTP_OK);
+        }
+
+        $producto->setDescuento($descuento);
+        $em->flush();
+
+        $precioConDescuento = $producto->getPrecio() * (1 - $descuento / 100);
+
+        return $this->json([
+            'message' => 'Descuento aplicado correctamente',
+            'precio_final' => round($precioConDescuento, 2)
+        ], Response::HTTP_OK);
+    }
+
+
 
     #[Route('/test', name: 'app_producto_test', methods: ['GET'])]
     public function test(): Response

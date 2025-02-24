@@ -52,7 +52,8 @@ class Producto
     #[ORM\Column(length: 900)]
     private ?string $codigo_juego = null;
 
-
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $descuento = null;
 
 //    #[Ignore]
     #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'producto')]
@@ -67,8 +68,6 @@ class Producto
     {
         $this->lineaPedidos = $lineaPedidos;
     }
-
-
 
 
     public function getId(): ?int
@@ -167,4 +166,15 @@ class Producto
     {
         $this->codigo_juego = $codigo_juego;
     }
+
+    public function getDescuento(): ?float
+    {
+        return $this->descuento;
+    }
+
+    public function setDescuento(?float $descuento): void
+    {
+        $this->descuento = $descuento;
+    }
+
 }

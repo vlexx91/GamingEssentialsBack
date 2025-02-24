@@ -32,14 +32,27 @@ create table producto(
 	imagen varchar(900) not null,
 	precio float not null,
 	categoria int not null,
-    codigo_juego varchar(900) not null
+    codigo_juego varchar(900) not null,
+    descuento float
 );
+
+CREATE TABLE lista_deseos (
+    id SERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_producto INT NOT NULL,
+    fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_lista_deseos_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id) ON DELETE CASCADE,
+    CONSTRAINT fk_lista_deseos_producto FOREIGN KEY (id_producto) REFERENCES producto(id) ON DELETE CASCADE,
+    UNIQUE (id_usuario, id_producto)
+);
+
 
 create table valoraciones(
 	id serial primary key not null,
 	estrellas int not null,
 	comentario varchar(2000),
     activado boolean not null,
+    fecha timestamp default CURRENT_TIMESTAMP,
 	id_usuario int not null,
 	id_producto int not null,
     constraint fk_valoraciones_usuario foreign key (id_usuario) references usuario(id),
