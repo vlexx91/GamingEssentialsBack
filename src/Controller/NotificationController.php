@@ -7,7 +7,6 @@ use App\Repository\ListaDeseosRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 
@@ -15,15 +14,13 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class NotificationController extends AbstractController
 {
-    #[Route('', methods: ['GET'])]
+    #[Route('', name: 'notificaciones', methods: ['GET'])]
     public function obtenerNotificaciones(ListaDeseosRepository $listaDeseosRepository, EntityManagerInterface $entityManager): JsonResponse
     {
-        // Obtener el usuario autenticado
         $usuario = $this->getUser();
         $idUsuario = $usuario->getId();
 
-        // Obtener los juegos en la lista de deseos del usuario
-        $listaDeseos = $listaDeseosRepository->findBy(['usuario' => $idUsuario]);
+        $listaDeseos = $listaDeseosRepository->findBy(['usuario' => $idUsuario, 'notificacion' => true]);
 
         $notificaciones = [];
         foreach ($listaDeseos as $deseo) {
@@ -32,6 +29,8 @@ class NotificationController extends AbstractController
                 $notificaciones[] = [
                     'id' => $producto->getId(),
                     'nombre' => $producto->getNombre(),
+                    'descripcion' => $producto->getDescripcion(),
+                    'precio' => $producto->getPrecio(),
                     'imagen' => $producto->getImagen(),
                     'mensaje' => "El juego '{$producto->getNombre()}' ya está disponible 🎮",
                 ];
@@ -39,5 +38,24 @@ class NotificationController extends AbstractController
         }
 
         return $this->json($notificaciones);
+    }
+
+    #[Route('/{idProducto}', name: 'eliminar_notificaciones',methods: ['PUT'])]
+    public function eliminarNotificacion(int $idProducto, ListaDeseosRepository $listaDeseosRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $usuario = $this->getUser();
+        $idUsuario = $usuario->getId();
+
+        $deseo = $listaDeseosRepository->findOneBy(['usuario' => $idUsuario, 'producto' => $idProducto]);
+
+        if ($deseo) {
+            $deseo->setNotificacion(false);
+//            $entityManager->persist($deseo);
+            $entityManager->flush();
+
+            return $this->json(['mensaje' => 'Notificación actualizada correctamente.'], JsonResponse::HTTP_OK);
+        }
+
+        return $this->json(['mensaje' => 'Notificación no encontrada.'], JsonResponse::HTTP_NOT_FOUND);
     }
 }
