@@ -32,7 +32,7 @@ RUN chown -R symfonyuser:symfonyuser /var/www/symfony
 USER symfonyuser
 
 # Instalar dependencias de Symfony sin ejecutar los scripts
-RUN composer install --no-scripts --no-autoloader
+RUN composer install --no-dev --optimize-autoloader
 
 # Crear el directorio var/ manualmente si no existe
 RUN mkdir -p var && chmod -R 777 var/
