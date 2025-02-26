@@ -1,4 +1,6 @@
 {
+    "name": "vlexx91/gaming-essentials",
+    "description": "Backend para Gaming Essentials",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
