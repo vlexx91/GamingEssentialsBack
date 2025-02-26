@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Enum\Categoria;
 use App\Enum\Plataforma;
 use App\Repository\ProductoRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -60,6 +61,41 @@ class Producto
 //    #[Ignore]
     #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'producto')]
     private Collection $lineaPedidos;
+
+    #[ORM\OneToMany(targetEntity: ListaDeseos::class, mappedBy: 'producto')]
+    private Collection $listaDeseos;
+
+    public function __construct()
+    {
+        $this->listaDeseos = new ArrayCollection();
+    }
+
+    public function getListaDeseos(): Collection
+    {
+        return $this->listaDeseos;
+    }
+
+    public function addListaDeseo(ListaDeseos $listaDeseo): self
+    {
+        if (!$this->listaDeseos->contains($listaDeseo)) {
+            $this->listaDeseos[] = $listaDeseo;
+            $listaDeseo->setProducto($this);
+        }
+
+        return $this;
+    }
+
+    public function removeListaDeseo(ListaDeseos $listaDeseo): self
+    {
+        if ($this->listaDeseos->removeElement($listaDeseo)) {
+            // set the owning side to null (unless already changed)
+            if ($listaDeseo->getProducto() === $this) {
+                $listaDeseo->setProducto(null);
+            }
+        }
+
+        return $this;
+    }
 
     public function getLineaPedidos(): Collection
     {

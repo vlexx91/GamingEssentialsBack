@@ -7,12 +7,17 @@ use App\Entity\Usuario;
 use App\Enum\Plataforma;
 use App\Enum\Categoria;
 use App\Repository\LineaPedidoRepository;
+use App\Repository\ListaDeseosRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\ProductoRepository;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -115,9 +120,11 @@ class ProductoController extends AbstractController
 //    }
 
 
+    // src/Controller/ProductoController.php
+
     #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['PUT'])]
     #[IsGranted('ROLE_GESTOR')]
-    public function editarProducto( Request $request, EntityManagerInterface $em, Producto $producto): JsonResponse
+    public function editarProducto(Request $request, EntityManagerInterface $em, Producto $producto, ListaDeseosRepository $listaDeseosRepository, MailerInterface $mailer): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
 
@@ -125,16 +132,19 @@ class ProductoController extends AbstractController
             return $this->json(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        // Actualizar los campos del producto
+        $disponibilidadAnterior = $producto->isDisponibilidad();
+
         if (isset($datos['nombre'])) {
             $producto->setNombre($datos['nombre']);
         }
         if (isset($datos['descripcion'])) {
             $producto->setDescripcion($datos['descripcion']);
         }
+
         if (isset($datos['disponibilidad'])) {
             $producto->setDisponibilidad(filter_var($datos['disponibilidad'], FILTER_VALIDATE_BOOLEAN));
         }
+
         if (isset($datos['plataforma'])) {
             $producto->setPlataforma(Plataforma::from($datos['plataforma']));
         }
@@ -148,11 +158,32 @@ class ProductoController extends AbstractController
             $producto->setImagen($datos['imagen']);
         }
 
-        // Persistir y guardar los cambios
-//        $em->persist($producto);
         $em->flush();
 
+        if (!$disponibilidadAnterior && $producto->isDisponibilidad()) {
+            $usuariosInteresados = $listaDeseosRepository->findUsuariosPorProducto($producto->getId());
+
+            foreach ($usuariosInteresados as $usuario) {
+                $this->enviarNotificacion($usuario, $producto, $mailer);
+            }
+        }
+
         return $this->json(['message' => 'Producto editado correctamente'], Response::HTTP_OK);
+    }
+
+    private function enviarNotificacion($listaDeseos, $producto, MailerInterface $mailer)
+    {
+        $usuario = $listaDeseos->getUsuario();
+        $email = (new Email())
+            ->from('gameessentialsteam@gmail.com')
+            ->to($usuario->getCorreo())
+            ->subject('Producto disponible')
+            ->text('El producto ' . $producto->getNombre() . ' ahora está disponible.');
+
+        $transport = Transport::fromDsn($_ENV['MAILER_DSN']);
+        $mailer = new Mailer($transport);
+
+        $mailer->send($email);
     }
 
     #[Route('/eliminar/{id}', name: 'app_producto_eliminar', methods: ['DELETE'])]

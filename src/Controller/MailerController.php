@@ -13,6 +13,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Usuario;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,31 +26,35 @@ use Symfony\Component\Routing\Attribute\Route;
 require __DIR__ . '/../../vendor/autoload.php';
 
 
+// src/Controller/MailerController.php
+
+// src/Controller/MailerController.php
+
 #[Route('/api/mailer')]
 class MailerController extends AbstractController
 {
-
     #[Route("/send-email", name:"send_email")]
     function sendTestEmail(Request $request): Response
     {
-
-//        $user = $this->getUser();
-//        $to = $user ? $user->getEmail() : null;
         if (!$this->getUser()) {
             return new Response("Acceso no autorizado", Response::HTTP_UNAUTHORIZED);
         }
+
+        $user = $this->getUser();
+        $userEmail = $user->getCorreo();
+        $userName = $user->getUsername();
 
         $data = json_decode($request->getContent(), true);
         $to = $data['to'] ?? 'gameessentialsteam@gmail.com';
         $subject = $data['subject'] ?? 'Consulta Chatbox';
         $text = $data['text'] ?? null;
-//        $subject = $request->request->get('subject');
-//        $text = $request->request->get('text');
-
 
         if (empty($subject) || empty($text)) {
             return new Response("Both subject and text are required.", Response::HTTP_BAD_REQUEST);
         }
+
+        // Incluir el correo del usuario en el mensaje
+        $text .= "\n\nCorreo del cliente: " . $userEmail . "\n\nUsername del cliente: " . $userName;
 
         $transport = Transport::fromDsn('smtp://gameessentialsteam@gmail.com:fupzrvwiatrfmrke@smtp.gmail.com:587');
         $mailer = new Mailer($transport);
@@ -60,7 +65,6 @@ class MailerController extends AbstractController
             ->subject($subject)
             ->text($text);
 
-
         try {
             $mailer->send($email);
 
@@ -70,6 +74,8 @@ class MailerController extends AbstractController
                 ['Content-Type' => 'application/json']
             );
         } catch (\Exception $e) {
+            // Registrar el error para depuración
+            $this->get('logger')->error('Error al enviar el correo: ' . $e->getMessage());
 
             return new JsonResponse(
                 ["error" => "Error al enviar el correo: " . $e->getMessage()],
@@ -78,5 +84,34 @@ class MailerController extends AbstractController
             );
         }
     }
+
+//    #[Route("/send-product-notification", name: "send_product_notification", methods: ["POST"])]
+//    public function sendProductNotification(Request $request): Response
+//    {
+//        $data = json_decode($request->getContent(), true);
+//
+//        $userEmail = $data['email'] ?? null;
+//        $productName = $data['productName'] ?? null;
+//
+//        if (!$userEmail || !$productName) {
+//            return new JsonResponse(["error" => "Faltan parámetros."], Response::HTTP_BAD_REQUEST);
+//        }
+//
+//        $transport = Transport::fromDsn('smtp://gameessentialsteam@gmail.com:fupzrvwiatrfmrke@smtp.gmail.com:587');
+//        $mailer = new Mailer($transport);
+//
+//        $email = (new Email())
+//            ->from('gameessentialsteam@gmail.com')
+//            ->to($userEmail)
+//            ->subject("¡{$productName} está disponible!")
+//            ->html("<p>Hola,</p><p>El producto <strong>{$productName}</strong> ya está disponible en nuestra tienda.</p><p>¡Corre a comprarlo!</p>");
+//
+//        try {
+//            $mailer->send($email);
+//            return new JsonResponse(["message" => "Notificación enviada a $userEmail"], Response::HTTP_OK);
+//        } catch (\Exception $e) {
+//            return new JsonResponse(["error" => "Error al enviar el correo: " . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
 }
