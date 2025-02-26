@@ -117,9 +117,31 @@ class ListaDeseosController extends AbstractController
     }
 
     #[Route('/listar', name: 'listar_lista_deseos', methods: ['GET'])]
-    public function listar(EntityManagerInterface $em): JsonResponse
+    public function listar(Request $request, EntityManagerInterface $em, JWTTokenManagerInterface $jwtManager): JsonResponse
     {
-        $listaDeseos = $em->getRepository(ListaDeseos::class)->findAll();
+        $token = $request->headers->get('Authorization');
+        if (!$token) {
+            return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+        try {
+            $finalToken = $jwtManager->parse($formatToken);
+            $username = $finalToken['username'] ?? null;
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$username) {
+            return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        $usuario = $em->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+        if (!$usuario) {
+            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $listaDeseos = $em->getRepository(ListaDeseos::class)->findBy(['usuario' => $usuario]);
 
         $productos = array_map(fn($deseo) => [
             'id' => $deseo->getProducto()->getId(),
