@@ -11,8 +11,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libonig-dev \
     libssl-dev \
-    snmp \
-    && docker-php-ext-install intl pdo pdo_pgsql pgsql zip opcache snmp
+    && docker-php-ext-install intl pdo pdo_pgsql pgsql zip opcache
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
