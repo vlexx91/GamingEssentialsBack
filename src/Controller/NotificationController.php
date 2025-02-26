@@ -14,26 +14,29 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class NotificationController extends AbstractController
 {
-    #[Route('', name: 'notificaciones', methods: ['GET'])]
+    #[Route('', name: 'notificaciones_1', methods: ['GET'])]
     public function obtenerNotificaciones(ListaDeseosRepository $listaDeseosRepository, EntityManagerInterface $entityManager): JsonResponse
     {
         $usuario = $this->getUser();
-        $idUsuario = $usuario->getId();
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no autenticado']);
+        }
 
-        $listaDeseos = $listaDeseosRepository->findBy(['usuario' => $idUsuario, 'notificacion' => true]);
+        $idUsuario = $usuario->getId();
+        $listaDeseos = $listaDeseosRepository->findBy(['usuario' => $idUsuario]);
 
         $notificaciones = [];
         foreach ($listaDeseos as $deseo) {
-            $producto = $entityManager->getRepository(Producto::class)->find($deseo->getProducto()->getId());
-            if ($producto && $producto->isDisponibilidad()) {
-                $notificaciones[] = [
-                    'id' => $producto->getId(),
-                    'nombre' => $producto->getNombre(),
-                    'descripcion' => $producto->getDescripcion(),
-                    'precio' => $producto->getPrecio(),
-                    'imagen' => $producto->getImagen(),
-                    'mensaje' => "El juego '{$producto->getNombre()}' ya está disponible 🎮",
-                ];
+            if ($deseo->isNotificacion()) {
+                $producto = $entityManager->getRepository(Producto::class)->find($deseo->getProducto()->getId());
+                if ($producto && $producto->isDisponibilidad()) {
+                    $notificaciones[] = [
+                        'id' => $producto->getId(),
+                        'nombre' => $producto->getNombre(),
+                        'imagen' => $producto->getImagen(),
+                        'mensaje' => "El juego '{$producto->getNombre()}' ya está disponible 🎮",
+                    ];
+                }
             }
         }
 
