@@ -51,9 +51,11 @@ class Producto
     private ?Plataforma $plataforma = null;
 
     #[ORM\Column(length: 900)]
+    #[Groups(['producto'])]
     private ?string $codigo_juego = null;
 
     #[ORM\Column(type: 'float', nullable: true)]
+    #[Groups(['producto'])]
     private ?float $descuento = null;
 
 //    #[Ignore]

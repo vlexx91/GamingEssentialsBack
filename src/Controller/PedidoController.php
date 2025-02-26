@@ -291,6 +291,7 @@ class PedidoController extends AbstractController
                     'nombre' => $producto->getNombre(),
                     'imagen' => $producto->getImagen(),
                     'precio' => $producto->getPrecio(),
+                    'codigo_juego' => $producto->getCodigoJuego(),
                 ]
             ];
         }
@@ -539,6 +540,106 @@ class PedidoController extends AbstractController
         return $this->json($response);
     }
 
+    #[Route('/{id}/descargar-pdf', name: 'pedido_pdf')]
+    public function descargarPdf(int $id, EntityManagerInterface $em): Response
+    {
+        $pedido = $em->getRepository(Pedido::class)->find($id);
+
+        if (!$pedido) {
+            return new Response('Pedido no encontrado', 404);
+        }
+
+        // Simulamos la generación de productos comprados para el ejemplo
+        $productosComprados = '';
+        $total = $pedido->getPagoTotal();
+
+        foreach ($pedido->getLineaPedidos() as $linea) {
+            // Obtenemos el producto relacionado con la línea de pedido
+            $producto = $linea->getProducto();  // Obtenemos el producto
+
+            // Repetimos el código del producto tantas veces como la cantidad de esa línea
+            $codigoProductoRepetido = str_repeat($producto->getCodigoJuego() . ' ', $linea->getCantidad());
+
+            // Añadimos el detalle del producto y su código repetido
+            $productosComprados .= '- ' . $producto->getNombre()
+                . ' | Códigos: ' . $codigoProductoRepetido  // Repetimos el código
+                . ' | Precio: ' . $linea->getPrecio() . '€'
+                . ' x ' . $linea->getCantidad() . "\n";  // Información del producto
+        }
+
+        // Generamos el PDF
+        $options = new Options();
+        $options->set('defaultFont', 'Arial');
+        $dompdf = new Dompdf($options);
+
+        $html = "
+   <style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+    h1 {
+        color: #333;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        table-layout: fixed;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    th {
+        background-color: #f4f4f4;
+        text-align: center;
+    }
+    th:nth-child(3), td:nth-child(3) {
+        width: 50%;
+    }
+    .total {
+        font-weight: bold;
+        color: #d9534f;
+    }
+    .footer {
+        margin-top: 20px;
+        font-style: italic;
+    }
+</style>
+<h1>Detalle del Pedido</h1>
+<table>
+    <tr>
+        <th><strong>Pedido ID</strong></th>
+        <th><strong>Fecha</strong></th>
+        <th><strong>Productos</strong></th>
+        <th class='total'><strong>Total</strong></th>
+    </tr>
+    <tr>
+        <td>{$pedido->getId()}</td>
+        <td>{$pedido->getFecha()->format('d/m/Y')}</td>
+        <td><pre style='white-space: pre-wrap;'><strong>{$productosComprados}</strong></pre></td>
+        <td class='total'>{$total}€</td>
+    </tr>
+</table>
+<p class='footer'>Gracias por confiar en nosotros.</p>
+    ";
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return new Response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="pedido_' . $pedido->getId() . '.pdf"',
+        ]);
+    }
+
+
+
     #[Route('/cambiarEstado/{id}', name: 'cambiar_estado_pedido', methods: ['PUT'])]
     public function cambiarEstado(int $id, EntityManagerInterface $em, LineaPedidoRepository $lineaPedidoRepository): JsonResponse
     {
@@ -579,5 +680,7 @@ class PedidoController extends AbstractController
 
         return $this->json(['message' => 'Estado del pedido cambiado y correo enviado'], Response::HTTP_OK);
     }
+
+
 
 }
