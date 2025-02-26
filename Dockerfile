@@ -1,4 +1,4 @@
-FROM PHP:8.2-apache
+FROM php:8.2-apache
 
 # Instalar dependencias del sistema y extensiones de PHP
 RUN apt-get update && apt-get install -y \
@@ -30,9 +30,6 @@ RUN chown -R symfonyuser:symfonyuser /var/www/symfony
 
 # Cambiar a usuario no-root
 USER symfonyuser
-
-# Instalar dependencias de Symfony sin ejecutar los scripts
-RUN composer install --no-scripts --no-autoloader
 
 # Crear el directorio var/ manualmente si no existe
 RUN mkdir -p var && chmod -R 777 var/
