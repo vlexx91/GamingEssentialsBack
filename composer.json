@@ -8,6 +8,7 @@
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-snmp": "*",
+        "amphp/http-client": "4.2.1",
         "cloudinary/cloudinary_php": "^3.1",
         "doctrine/dbal": "^3",
         "doctrine/doctrine-bundle": "^2.13",
