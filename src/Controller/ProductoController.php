@@ -270,7 +270,11 @@ class ProductoController extends AbstractController
         $producto->setPlataforma(Plataforma::from($datos['plataforma']));
         $producto->setPrecio(floatval($datos['precio']));
         $producto->setCategoria(Categoria::from($datos['categoria']));
-        $producto->setCodigoJuego($codigoJuego);
+        if ($producto->getCategoria() === Categoria::PERIFERICOS){
+            $producto->setCodigoJuego(null);
+        }else{
+            $producto->setCodigoJuego($codigoJuego);
+        }
         $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
 
         $em->persist($producto);
