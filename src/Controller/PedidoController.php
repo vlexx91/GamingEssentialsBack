@@ -407,16 +407,19 @@ class PedidoController extends AbstractController
                 $lineaPedido = new LineaPedido();
                 $lineaPedido->setPedido($pedido);
                 $lineaPedido->setProducto($producto);
-                $lineaPedido->setCantidad(1); // Set quantity to 1 for each unique code
+                $lineaPedido->setCantidad(1);
                 $lineaPedido->setPrecio($producto->getPrecio());
 
                 $total += $producto->getPrecio();
-                $codigoJuego = $producto->getCodigoJuego() . '-' . uniqid();
-                $productosComprados .= '- ' . $producto->getNombre() . ' ' . 'Precio:  ' . $producto->getPrecio() . '€ ' . ' Código:  ' . $codigoJuego . "\n";
 
                 if ($producto->getCategoria() === Categoria::PERIFERICOS) {
-                    $shippingFee += 4.99; // Add shipping fee for each peripheral
+                    $productosComprados .= '- ' . $producto->getNombre() . ' ' . 'Precio:  ' . $producto->getPrecio() . '€' . "\n";
+                    $shippingFee += 4.99;
+                } else {
+                    $codigoJuego = $producto->getCodigoJuego() . '-' . uniqid();
+                    $productosComprados .= '- ' . $producto->getNombre() . ' ' . 'Precio:  ' . $producto->getPrecio() . '€ ' . ' Código:  ' . $codigoJuego . "\n";
                 }
+
 
                 $em->persist($lineaPedido);
             }
@@ -429,13 +432,14 @@ class PedidoController extends AbstractController
         $em->flush();
 
         $pdfPath = $this->generarPdfPedido($pedido, $productosComprados, $total);
+        $currentDateTime = (new \DateTime())->format('Ymd');
 
         $email = (new Email())
             ->from('gameessentialsteam@gmail.com')
             ->to($perfil->getUsuario()->getCorreo())
             ->subject('Pedido registrado con éxito')
-            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€ (incluye 4.99€ de gastos de gestión y ' . $shippingFee . '€ de gastos de envío)'."\n".'Gracias por confiar en nosotros')
-            ->attachFromPath($pdfPath, 'GamingEssentials Pedido_' . $pedido->getId() . '.pdf');
+            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n"."\n"  .$productosComprados. "\n" .'Total: ' . $total . '€ (incluye 4.99€ de gastos de gestión y ' . $shippingFee . '€ de gastos de envío)'."\n".'Gracias por confiar en nosotros')
+            ->attachFromPath($pdfPath, 'GamingEssentials Pedido_'.$currentDateTime . $pedido->getId() . '.pdf');
 
         $mailer = new Mailer(Transport::fromDsn($_ENV['MAILER_DSN']));
         $mailer->send($email);
