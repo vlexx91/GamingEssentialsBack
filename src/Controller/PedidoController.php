@@ -399,6 +399,7 @@ class PedidoController extends AbstractController
 
         $total = 0;
         $productosComprados = '';
+        $shippingFee = 0;
 
         foreach ($productos as $productoData) {
             $producto = $em->getRepository(Producto::class)->find($productoData['id']);
@@ -413,23 +414,28 @@ class PedidoController extends AbstractController
                 $codigoJuego = $producto->getCodigoJuego() . '-' . uniqid();
                 $productosComprados .= '- ' . $producto->getNombre() . ' ' . 'Precio:  ' . $producto->getPrecio() . '€ ' . ' Código:  ' . $codigoJuego . "\n";
 
+                if ($producto->getCategoria() === Categoria::PERIFERICOS) {
+                    $shippingFee += 4.99; // Add shipping fee for each peripheral
+                }
+
                 $em->persist($lineaPedido);
             }
         }
+
+        $managementFee = 4.99;
+        $total += $managementFee + $shippingFee;
 
         $pedido->setPagoTotal($total);
         $em->flush();
 
         $pdfPath = $this->generarPdfPedido($pedido, $productosComprados, $total);
 
-
         $email = (new Email())
             ->from('gameessentialsteam@gmail.com')
             ->to($perfil->getUsuario()->getCorreo())
             ->subject('Pedido registrado con éxito')
-            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros')
+            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€ (incluye 4.99€ de gastos de gestión y ' . $shippingFee . '€ de gastos de envío)'."\n".'Gracias por confiar en nosotros')
             ->attachFromPath($pdfPath, 'GamingEssentials Pedido_' . $pedido->getId() . '.pdf');
-
 
         $mailer = new Mailer(Transport::fromDsn($_ENV['MAILER_DSN']));
         $mailer->send($email);
