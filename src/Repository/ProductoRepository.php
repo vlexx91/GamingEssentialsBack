@@ -92,6 +92,15 @@ class ProductoRepository extends ServiceEntityRepository
                 ->setParameter('maxPrecio', $criterios['maxPrecio']);
         }
 
+        if (!empty($criterios['disponibilidad'])) {
+            $qb->andWhere('p.disponibilidad = :disponibilidad')
+                ->setParameter('disponibilidad', $criterios['disponibilidad']);
+        }
+
+        if(!empty($criterios['descuento'])){
+            $qb->andWhere('p.descuento > 0');
+        }
+
         return $qb->getQuery()->getResult();
     }
 

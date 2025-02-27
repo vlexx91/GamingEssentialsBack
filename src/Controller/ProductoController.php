@@ -77,6 +77,8 @@ class ProductoController extends AbstractController
         $categoria = $request->query->get('categoria');
         $minPrecio = $request->query->get('minPrecio');
         $maxPrecio = $request->query->get('maxPrecio');
+        $disponibilidad = $request->query->get('disponibilidad');
+        $descuento = $request->query->get('descuento');
 
         $criterios = array_filter([
             'nombre' => $nombre,
@@ -84,6 +86,8 @@ class ProductoController extends AbstractController
             'categoria' => $categoria,
             'minPrecio' => $minPrecio,
             'maxPrecio' => $maxPrecio,
+            'disponibilidad' => $disponibilidad,
+            'descuento' => $descuento
         ]);
 
         $productos = $this->productoRepository->findByCriteria($criterios);
