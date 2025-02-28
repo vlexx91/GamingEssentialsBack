@@ -213,6 +213,8 @@ class ValoracionesController extends AbstractController
                         'imagen' => $producto->getImagen(),
                         'categoria' => $producto->getCategoria(),
                         'disponibilidad' => $producto->isDisponibilidad(),
+                        'descuento' =>  $producto->getDescuento(),
+                        'promedioValoraciones' => $promedio
                     ],
                     'promedio' => $promedio
                 ];
@@ -222,8 +224,7 @@ class ValoracionesController extends AbstractController
         // Ordenar por promedio de valoraciones
         usort($promedios, fn($a, $b) => $b['promedio'] <=> $a['promedio']);
 
-        // Obtener solo los 5 primeros
-        $topProductos = array_slice($promedios, 0, 5);
+        $topProductos = array_slice($promedios, 0, 10);
 
         // Solo devolver la parte de 'producto'
         $topProductosLimpios = array_map(fn($p) => $p['producto'], $topProductos);
