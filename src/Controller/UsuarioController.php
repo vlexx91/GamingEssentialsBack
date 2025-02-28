@@ -443,8 +443,13 @@ class UsuarioController extends AbstractController
     {
         $gestores = $this->usuarioRepository->findBy(['rol' => 'ROLE_GESTOR']);
 
-        return $this->json($gestores, Response::HTTP_OK);
+        return $this->json($gestores, Response::HTTP_OK, [], [
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
     }
+
 
     #[Route('/eliminarGestor/{id}', name: 'usuario_eliminar_gestor', methods: ['DELETE'])]
     public function eliminarGestor(int $id, EntityManagerInterface $em): JsonResponse
