@@ -399,37 +399,47 @@ class PedidoController extends AbstractController
 
         $total = 0;
         $productosComprados = '';
+        $shippingFee = 0;
 
         foreach ($productos as $productoData) {
             $producto = $em->getRepository(Producto::class)->find($productoData['id']);
-            for($i = 0; $i < $productoData['cantidad']; $i++){
+            for ($i = 0; $i < $productoData['cantidad']; $i++) {
                 $lineaPedido = new LineaPedido();
                 $lineaPedido->setPedido($pedido);
                 $lineaPedido->setProducto($producto);
                 $lineaPedido->setCantidad(1);
                 $lineaPedido->setPrecio($producto->getPrecio());
 
-            $total += $producto->getPrecio();
-            $codigoJuego = $producto->getCodigoJuego() . '-' . uniqid();
-            $productosComprados .= '- ' . $producto->getNombre() . ' ' . 'Precio:  ' . $producto->getPrecio() . '€ ' . ' Código:  ' . $codigoJuego . "\n";
+                $total += $producto->getPrecio();
 
-            $em->persist($lineaPedido);
+                if ($producto->getCategoria() === Categoria::PERIFERICOS) {
+                    $productosComprados .= '- ' . $producto->getNombre() . ' ' . 'Precio:  ' . $producto->getPrecio() . '€' . "\n";
+                    $shippingFee += 4.99;
+                } else {
+                    $codigoJuego = $producto->getCodigoJuego() . '-' . uniqid();
+                    $productosComprados .= '- ' . $producto->getNombre() . ' ' . 'Precio:  ' . $producto->getPrecio() . '€ ' . ' Código:  ' . $codigoJuego . "\n";
+                }
+
+
+                $em->persist($lineaPedido);
             }
         }
+
+        $managementFee = 4.99;
+        $total += $managementFee + $shippingFee;
 
         $pedido->setPagoTotal($total);
         $em->flush();
 
         $pdfPath = $this->generarPdfPedido($pedido, $productosComprados, $total);
-
+        $currentDateTime = (new \DateTime())->format('Ymd');
 
         $email = (new Email())
             ->from('gameessentialsteam@gmail.com')
             ->to($perfil->getUsuario()->getCorreo())
             ->subject('Pedido registrado con éxito')
-            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n" .'- ' .$productosComprados. "\n" .'Total: ' . $total . '€'."\n".'Gracias por confiar en nosotros')
-            ->attachFromPath($pdfPath, 'GamingEssentials Pedido_' . $pedido->getId() . '.pdf');
-
+            ->text('Gracias por tu compra. Aquí tienes el detalle de tu pedido:' . "\n"."\n"  .$productosComprados. "\n" .'Total: ' . $total . '€ (incluye 4.99€ de gastos de gestión y ' . $shippingFee . '€ de gastos de envío)'."\n".'Gracias por confiar en nosotros')
+            ->attachFromPath($pdfPath, 'GamingEssentials Pedido_'.$currentDateTime . $pedido->getId() . '.pdf');
 
         $mailer = new Mailer(Transport::fromDsn($_ENV['MAILER_DSN']));
         $mailer->send($email);

@@ -167,9 +167,12 @@ class ProductoController extends AbstractController
         if (!$disponibilidadAnterior && $producto->isDisponibilidad()) {
             $usuariosInteresados = $listaDeseosRepository->findUsuariosPorProducto($producto->getId());
 
-            foreach ($usuariosInteresados as $usuario) {
-                $this->enviarNotificacion($usuario, $producto, $mailer);
+            foreach ($usuariosInteresados as $listaDeseos) {
+                $listaDeseos->setNotificacion(true);
+                $em->persist($listaDeseos);
+                $this->enviarNotificacion($listaDeseos, $producto, $mailer);
             }
+            $em->flush();
         }
 
         return $this->json(['message' => 'Producto editado correctamente'], Response::HTTP_OK);
@@ -271,7 +274,11 @@ class ProductoController extends AbstractController
         $producto->setPlataforma(Plataforma::from($datos['plataforma']));
         $producto->setPrecio(floatval($datos['precio']));
         $producto->setCategoria(Categoria::from($datos['categoria']));
-        $producto->setCodigoJuego($codigoJuego);
+        if ($producto->getCategoria() === Categoria::PERIFERICOS){
+            $producto->setCodigoJuego(null);
+        }else{
+            $producto->setCodigoJuego($codigoJuego);
+        }
         $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
 
         $em->persist($producto);
