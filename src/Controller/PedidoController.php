@@ -446,7 +446,9 @@ class PedidoController extends AbstractController
 
         unlink($pdfPath);
 
-    }private function generarPdfPedido(Pedido $pedido, string $productosComprados, float $total): string
+    }
+
+    private function generarPdfPedido(Pedido $pedido, string $productosComprados, float $total): string
 {
     $options = new Options();
     $options->set('defaultFont', 'Arial');
