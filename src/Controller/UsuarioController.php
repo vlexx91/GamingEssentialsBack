@@ -45,7 +45,6 @@ class UsuarioController extends AbstractController
     public function registro(Request $request, EntityManagerInterface $em,
                              UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
-//        $transport = Transport::fromDsn('smtp://gameessentialsteam@gmail.com:fupzrvwiatrfmrke@smtp.gmail.com:587');
         $transport = Transport::fromDsn($_ENV['MAILER_DSN']);
         $mailer = new Mailer($transport);
 
@@ -56,6 +55,18 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'El nombre de usuario ya está en uso'], Response::HTTP_CONFLICT);
         }
 
+        $esxistingEmail = $em->getRepository(Usuario::class)->findOneBy(['correo' => $datos['correo']]);
+        if ($esxistingEmail) {
+            return $this->json(['message' => 'El correo ya está en uso'], Response::HTTP_CONFLICT);
+        }
+
+        $fechaNacimiento = new \DateTime($datos['fechaNacimiento']);
+        $hoy = new \DateTime();
+        $edad = $hoy->diff($fechaNacimiento)->y;
+
+        if ($edad < 12) {
+            return $this->json(['message' => 'Debes tener al menos 12 años para registrarte'], Response::HTTP_BAD_REQUEST);
+        }
         $usuario = new Usuario();
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
@@ -68,22 +79,21 @@ class UsuarioController extends AbstractController
         $perfil->setApellido($datos['apellido']);
         $perfil->setDireccion($datos['direccion']);
         $perfil->setDni($datos['dni']);
-        $perfil->setFechaNacimiento(new \DateTime($datos['fechaNacimiento']));
+        $perfil->setFechaNacimiento($fechaNacimiento);
         $perfil->setTelefono($datos['telefono']);
 
         $perfil->setUsuario($usuario);
 
-        $codigoVerificacion = Uuid::uuid4()->toString(); // Genera un código único
-        $usuario->setCodigoVerificacion($codigoVerificacion); // Guardar en la BD
-        $usuario->setActivo(true); // Marcar usuario como inactivo hasta que verifique
-        $usuario->setVerificado(false); // Marcar usuario como no verificado
+        $codigoVerificacion = Uuid::uuid4()->toString();
+        $usuario->setCodigoVerificacion($codigoVerificacion);
+        $usuario->setActivo(true);
+        $usuario->setVerificado(false);
 
         $em->persist($usuario);
         $em->persist($perfil);
         $em->flush();
 
 
-        // Enviar correo electrónico
         $email = (new Email())
             ->from('gameessentialsteam@gmail.com')
             ->to($usuario->getCorreo())
@@ -111,7 +121,7 @@ class UsuarioController extends AbstractController
         }
 
         $usuario->setVerificado(true);
-        $usuario->setCodigoVerificacion(null); // Limpia el código después de la verificación
+        $usuario->setCodigoVerificacion(null);
         $em->flush();
 
         return $this->json(['message' => 'Usuario verificado exitosamente'], Response::HTTP_OK);
@@ -433,8 +443,13 @@ class UsuarioController extends AbstractController
     {
         $gestores = $this->usuarioRepository->findBy(['rol' => 'ROLE_GESTOR']);
 
-        return $this->json($gestores, Response::HTTP_OK);
+        return $this->json($gestores, Response::HTTP_OK, [], [
+            'circular_reference_handler' => function ($object) {
+                return $object->getId();
+            },
+        ]);
     }
+
 
     #[Route('/eliminarGestor/{id}', name: 'usuario_eliminar_gestor', methods: ['DELETE'])]
     public function eliminarGestor(int $id, EntityManagerInterface $em): JsonResponse

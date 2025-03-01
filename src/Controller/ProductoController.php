@@ -77,6 +77,8 @@ class ProductoController extends AbstractController
         $categoria = $request->query->get('categoria');
         $minPrecio = $request->query->get('minPrecio');
         $maxPrecio = $request->query->get('maxPrecio');
+        $disponibilidad = $request->query->get('disponibilidad');
+        $descuento = $request->query->get('descuento');
 
         $criterios = array_filter([
             'nombre' => $nombre,
@@ -84,6 +86,8 @@ class ProductoController extends AbstractController
             'categoria' => $categoria,
             'minPrecio' => $minPrecio,
             'maxPrecio' => $maxPrecio,
+            'disponibilidad' => $disponibilidad,
+            'descuento' => $descuento
         ]);
 
         $productos = $this->productoRepository->findByCriteria($criterios);
@@ -211,28 +215,16 @@ class ProductoController extends AbstractController
     }
 
 
-    #[Route('/aleatorios', name: 'app_producto_cliente_random' , methods: ['GET'])]
+    #[Route('/aleatorios', name: 'app_producto_cliente_random', methods: ['GET'])]
     public function indexClienteRandom(): Response
     {
         $productos = $this->productoRepository->findAvailableProducts();
 
-        // Si hay menos de 10 productos, se devuelven todos
-        $totalProductos = count($productos);
-        if ($totalProductos <= 15) {
-            $productosAleatorios = $productos;
-        } else {
-            $productosAleatorios = [];
-            $indicesSeleccionados = [];
+        // Mezclar los productos para obtener un orden aleatorio
+        shuffle($productos);
 
-            // Seleccionamos 10 índices aleatorios sin repetición
-            while (count($productosAleatorios) < 15) {
-                $indice = random_int(0, $totalProductos - 1);
-                if (!in_array($indice, $indicesSeleccionados)) {
-                    $indicesSeleccionados[] = $indice;
-                    $productosAleatorios[] = $productos[$indice];
-                }
-            }
-        }
+        // Seleccionar los primeros 15 productos después de mezclar
+        $productosAleatorios = array_slice($productos, 0, 15);
 
         $jsonContent = $this->serializer->serialize($productosAleatorios, 'json', ['groups' => 'producto']);
 
@@ -270,7 +262,11 @@ class ProductoController extends AbstractController
         $producto->setPlataforma(Plataforma::from($datos['plataforma']));
         $producto->setPrecio(floatval($datos['precio']));
         $producto->setCategoria(Categoria::from($datos['categoria']));
-        $producto->setCodigoJuego($codigoJuego);
+        if ($producto->getCategoria() === Categoria::PERIFERICOS){
+            $producto->setCodigoJuego(null);
+        }else{
+            $producto->setCodigoJuego($codigoJuego);
+        }
         $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
 
         $em->persist($producto);
