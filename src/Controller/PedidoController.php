@@ -291,7 +291,7 @@ class PedidoController extends AbstractController
                     'nombre' => $producto->getNombre(),
                     'imagen' => $producto->getImagen(),
                     'precio' => $producto->getPrecio(),
-                    'codigo_juego' => $producto->getCodigoJuego(),
+                    'codigo_juego' => $producto->getCodigoJuego().'-'.uniqid(),
                 ]
             ];
         }
