@@ -50,7 +50,7 @@ class Producto
     #[Groups(['producto', 'usuario'])]
     private ?Plataforma $plataforma = null;
 
-    #[ORM\Column(length: 900)]
+    #[ORM\Column(length: 900, nullable: true)]
     #[Groups(['producto'])]
     private ?string $codigo_juego = null;
 
