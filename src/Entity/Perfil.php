@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use phpDocumentor\Reflection\Types\Integer;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Serializer\Attribute\Ignore;
 
 #[ORM\Entity(repositoryClass: PerfilRepository::class)]
@@ -35,6 +36,7 @@ class Perfil
     private ?string $telefono = null;
 
     #[ORM\Column(length: 900)]
+    #[Groups("usuario")]
     private ?string $imagen;
 
 //    #[Ignore]
@@ -47,32 +49,6 @@ class Perfil
     #[ORM\OneToOne(targetEntity: Usuario::class, cascade: ["remove"])]
     #[ORM\JoinColumn(name: 'id_usuario', referencedColumnName: 'id', nullable: false)] // Cambia nullable según tus necesidades
     private ?Usuario $usuario = null;
-
-
-
-//    #[ORM\OneToMany(targetEntity: LineaPedido::class, mappedBy: 'perfil', cascade: ['remove'])]
-//    private Collection $lineaPedidos;
-//
-//    #[ORM\OneToMany(targetEntity: Pedido::class, mappedBy: 'perfil', cascade: ['remove'])]
-//    private Collection $pedidos;
-////
-////
-//    public function __construct()
-//    {
-//        $this->lineaPedidos = new ArrayCollection();
-//        $this->pedidos = new ArrayCollection();
-//    }
-////
-//    public function getLineaPedidos(): Collection
-//    {
-//        return $this->lineaPedidos;
-//    }
-////
-//    public function getPedidos(): Collection
-//    {
-//        return $this->pedidos;
-//    }
-
 
 
     public function getId(): ?int
