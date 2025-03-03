@@ -39,5 +39,5 @@
 /.idea/commandlinetools/Symfony_25_1_25__1_29.xml
 
 ###> lexik/jwt-authentication-bundle ###
-/config/jwt/*.pem
+
 ###< lexik/jwt-authentication-bundle ###

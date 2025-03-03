@@ -33,6 +33,12 @@ require __DIR__ . '/../../vendor/autoload.php';
 #[Route('/api/mailer')]
 class MailerController extends AbstractController
 {
+    /**
+     * Envía un correo a traves del chatbox si estas registrado e inicidao sesion.
+     *
+     * @param Request $request
+     * @return Response
+     */
     #[Route("/send-email", name:"send_email")]
     function sendTestEmail(Request $request): Response
     {
