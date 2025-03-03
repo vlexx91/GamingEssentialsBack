@@ -219,7 +219,6 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Clase editada'], Response::HTTP_OK);
     }
 
-    //No se puede liminar si no se elimina el perfil
 
     /**
      * Eliminar un usuario por el id
@@ -232,7 +231,6 @@ class UsuarioController extends AbstractController
     {
 
 
-        // Remove the user
         $em->remove($usuario);
         $em->flush();
 
@@ -877,7 +875,7 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'Correo no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        $codigo = random_int(100000, 999999); // Generate a 6-digit code
+        $codigo = random_int(100000, 999999);
         $usuario->setCodigoVerificacion($codigo);
         $em->flush();
 
@@ -917,7 +915,7 @@ class UsuarioController extends AbstractController
         }
 
         $usuario->setPassword($passwordHasher->hashPassword($usuario, $newPassword));
-        $usuario->setCodigoVerificacion(null); // Clear the code after resetting the password
+        $usuario->setCodigoVerificacion(null);
         $em->flush();
 
         return $this->json(['message' => 'Contraseña restablecida con éxito'], Response::HTTP_OK);

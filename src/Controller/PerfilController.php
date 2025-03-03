@@ -124,7 +124,6 @@ class PerfilController extends AbstractController
         return $this->json(['message' => 'Perfil y Usuario actualizados correctamente'], Response::HTTP_OK);
     }
 
-    //Editar a través del token
 
     #[Route('/editarportoken', name: 'perfil_editar_token', methods: ['PUT'])]
     public function editByToken(
@@ -165,7 +164,6 @@ class PerfilController extends AbstractController
 
         $datos = json_decode($request->getContent(), true);
 
-        // Validar que los datos requeridos existen antes de asignarlos
         if (!empty($datos['nombre'])) {
             $perfil->setNombre($datos['nombre']);
         }
@@ -182,10 +180,9 @@ class PerfilController extends AbstractController
             $perfil->setDni($datos['dni']);
         }
         if (!empty($datos['imagenUrl'])) {
-            $perfil->setImagen($datos['imagenUrl']); // Nuevo campo para la imagen
+            $perfil->setImagen($datos['imagenUrl']);
         }
 
-        // Guardamos los cambios en la base de datos
         $em->flush();
 
         return $this->json(['message' => 'Perfil actualizado correctamente'], Response::HTTP_OK);

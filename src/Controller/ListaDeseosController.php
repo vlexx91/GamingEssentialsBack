@@ -41,7 +41,6 @@ class ListaDeseosController extends AbstractController
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Obtenemos el producto a agregar a la lista de deseos
         $data = json_decode($request->getContent(), true);
         $producto = $em->getRepository(Producto::class)->find($data['id_producto']);
 
@@ -49,7 +48,6 @@ class ListaDeseosController extends AbstractController
             return new JsonResponse(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        // Comprobamos si ya está en la lista de deseos
         $existingWishlist = $em->getRepository(ListaDeseos::class)->findOneBy([
             'usuario' => $usuario,
             'producto' => $producto,
@@ -59,7 +57,6 @@ class ListaDeseosController extends AbstractController
             return new JsonResponse(['message' => 'Este producto ya está en tu lista de deseos'], Response::HTTP_CONFLICT);
         }
 
-        // Creamos una nueva entrada en la lista de deseos
         $listaDeseos = new ListaDeseos();
         $listaDeseos->setUsuario($usuario);
         $listaDeseos->setProducto($producto);

@@ -224,7 +224,6 @@ class ValoracionesController extends AbstractController
                 $totalEstrellas = array_sum(array_map(fn($v) => $v->getEstrellas(), $valoraciones));
                 $promedio = $totalEstrellas / count($valoraciones);
 
-                // Agregamos el producto completo en lugar de solo el ID
                 $promedios[] = [
                     'producto' => [
                         'id' => $producto->getId(),
@@ -242,12 +241,10 @@ class ValoracionesController extends AbstractController
             }
         }
 
-        // Ordenar por promedio de valoraciones
         usort($promedios, fn($a, $b) => $b['promedio'] <=> $a['promedio']);
 
         $topProductos = array_slice($promedios, 0, 10);
 
-        // Solo devolver la parte de 'producto'
         $topProductosLimpios = array_map(fn($p) => $p['producto'], $topProductos);
 
         return $this->json(['top_5_productos' => $topProductosLimpios], Response::HTTP_OK);
@@ -338,7 +335,7 @@ class ValoracionesController extends AbstractController
 
         $valoraciones = $valoracionesRepository->findBy(
             ['usuario' => $user],
-            ['id' => 'DESC'] // Ordenar de la más reciente a la más antigua
+            ['id' => 'DESC']
         );
 
         if (empty($valoraciones)) {
@@ -382,7 +379,6 @@ class ValoracionesController extends AbstractController
             return new JsonResponse(['message' => 'Valoración no encontrada'], Response::HTTP_NOT_FOUND);
         }
 
-        // Cambiar el estado de la valoración a desactivado
         $valoracion->setActivado(false);
         $entityManager->flush();
 

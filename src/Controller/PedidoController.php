@@ -39,7 +39,7 @@ class PedidoController extends AbstractController
 
     public function __construct(PedidoRepository $pedidoRepository, EntityManagerInterface $em, PerfilRepository $perfilRepository,ProductoRepository $productoRepository)
     {
-        date_default_timezone_set('Europe/Madrid'); // Set the timezone
+        date_default_timezone_set('Europe/Madrid');
 
         $this->pedidoRepository = $pedidoRepository;
         $this->em = $em;
@@ -67,10 +67,8 @@ class PedidoController extends AbstractController
     #[Route('/findall', name: 'todos_pedidos', methods: ['GET'])]
     public function findAll(): JsonResponse
     {
-        // Obtener todos los pedidos
         $pedidos = $this->pedidoRepository->findAll();
 
-        // Preparar la respuesta
         $data = [];
         foreach ($pedidos as $pedido) {
             $data[] = [
@@ -103,7 +101,6 @@ class PedidoController extends AbstractController
             return $this->json(['error' => 'Pedido no encontrado'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Eliminar el pedido (Doctrine se encargará de eliminar las líneas de pedido por cascada)
         $this->em->remove($pedido);
         $this->em->flush();
 
@@ -157,16 +154,13 @@ class PedidoController extends AbstractController
     #[Route('/perfilpedido', name: 'app_pedido_by_token', methods: ['GET'])]
     public function findByToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager, PerfilRepository $perfilRepository, PedidoRepository $pedidoRepository): JsonResponse
     {
-        // Obtener el token del encabezado Authorization
         $token = $request->headers->get('Authorization');
         if (!$token) {
             return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Limpiar el token (eliminar el "Bearer ")
         $formatToken = str_replace('Bearer ', '', $token);
 
-        // Decodificar el token
         try {
             $finalToken = $jwtManager->parse($formatToken);
             $username = $finalToken['username'] ?? null;
@@ -178,28 +172,24 @@ class PedidoController extends AbstractController
             return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
         }
 
-        // Buscar el usuario por su username
         $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
 
         if (!$user) {
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Obtener el perfil del usuario
         $perfil = $perfilRepository->findOneBy(['usuario' => $user->getId()]);
 
         if (!$perfil) {
             return new JsonResponse(['message' => 'Profile not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Buscar los pedidos asociados al perfil
         $pedidos = $pedidoRepository->findBy(['perfil' => $perfil],['fecha' => 'DESC']);
 
         if (empty($pedidos)) {
             return new JsonResponse(['message' => 'No orders found for this profile'], Response::HTTP_OK);
         }
 
-        // Serializar los pedidos con los grupos
         $data = [];
         foreach ($pedidos as $pedido) {
             $data[] = [
@@ -219,7 +209,6 @@ class PedidoController extends AbstractController
             ];
         }
 
-        // Devolver los pedidos en formato JSON
         return $this->json($data);
     }
 
@@ -487,7 +476,6 @@ class PedidoController extends AbstractController
                 'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
                 'estado' => $pedido->getEstado(),
                 'pagoTotal' => $pedido->getPagoTotal(),
-                //forma guay del david para llegar a fk
                 'username'=>$pedido->getPerfil()->getUsuario()->getUsername()
             ];
         }
@@ -509,25 +497,20 @@ class PedidoController extends AbstractController
             return new Response('Pedido no encontrado', 404);
         }
 
-        // Simulamos la generación de productos comprados para el ejemplo
         $productosComprados = '';
         $total = $pedido->getPagoTotal();
 
         foreach ($pedido->getLineaPedidos() as $linea) {
-            // Obtenemos el producto relacionado con la línea de pedido
-            $producto = $linea->getProducto();  // Obtenemos el producto
+            $producto = $linea->getProducto();
 
-            // Repetimos el código del producto tantas veces como la cantidad de esa línea
             $codigoProductoRepetido = str_repeat($producto->getCodigoJuego() . ' ', $linea->getCantidad());
 
-            // Añadimos el detalle del producto y su código repetido
             $productosComprados .= '- ' . $producto->getNombre()
-                . ' | Códigos: ' . $codigoProductoRepetido  // Repetimos el código
+                . ' | Códigos: ' . $codigoProductoRepetido
                 . ' | Precio: ' . $linea->getPrecio() . '€'
-                . ' x ' . $linea->getCantidad() . "\n";  // Información del producto
+                . ' x ' . $linea->getCantidad() . "\n";
         }
 
-        // Generamos el PDF
         $options = new Options();
         $options->set('defaultFont', 'Arial');
         $dompdf = new Dompdf($options);

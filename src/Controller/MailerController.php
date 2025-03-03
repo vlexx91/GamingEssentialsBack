@@ -59,7 +59,6 @@ class MailerController extends AbstractController
             return new Response("Both subject and text are required.", Response::HTTP_BAD_REQUEST);
         }
 
-        // Incluir el correo del usuario en el mensaje
         $text .= "\n\nCorreo del cliente: " . $userEmail . "\n\nUsername del cliente: " . $userName;
 
         $transport = Transport::fromDsn('smtp://gameessentialsteam@gmail.com:fupzrvwiatrfmrke@smtp.gmail.com:587');
@@ -80,7 +79,6 @@ class MailerController extends AbstractController
                 ['Content-Type' => 'application/json']
             );
         } catch (\Exception $e) {
-            // Registrar el error para depuración
             $this->get('logger')->error('Error al enviar el correo: ' . $e->getMessage());
 
             return new JsonResponse(

@@ -122,15 +122,6 @@ class ProductoController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
-    /**
-     * Editar un producto siendo gestor
-     * @param Request $request
-     * @param EntityManagerInterface $em
-     * @param Producto $producto
-     * @param ListaDeseosRepository $listaDeseosRepository
-     * @param MailerInterface $mailer
-     * @return JsonResponse
-     */
 
     /**
      * Edita la información de un producto, solo esta disponible para los gestores.
@@ -257,10 +248,8 @@ class ProductoController extends AbstractController
     {
         $productos = $this->productoRepository->findAvailableProducts();
 
-        // Mezclar los productos para obtener un orden aleatorio
         shuffle($productos);
 
-        // Seleccionar los primeros 15 productos después de mezclar
         $productosAleatorios = array_slice($productos, 0, 15);
 
         $jsonContent = $this->serializer->serialize($productosAleatorios, 'json', ['groups' => 'producto']);
@@ -316,7 +305,7 @@ class ProductoController extends AbstractController
         }else{
             $producto->setCodigoJuego($codigoJuego);
         }
-        $producto->setImagen($datos['imagen']); // Guarda la URL de la imagen
+        $producto->setImagen($datos['imagen']);
 
         $em->persist($producto);
         $em->flush();
