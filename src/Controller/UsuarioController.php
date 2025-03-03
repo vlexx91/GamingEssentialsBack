@@ -490,6 +490,7 @@ class UsuarioController extends AbstractController
                 'username' => $perfil->getUsuario()->getUsername(),
                 'correo' => $perfil->getUsuario()->getCorreo(),
                 'userId' => $perfil->getUsuario()->getId(),
+                'imagen'=> $perfil->getImagen(),
             ];
         }
 
@@ -515,6 +516,7 @@ class UsuarioController extends AbstractController
             'telefono' => $perfil->getTelefono(),
             'username' => $perfil->getUsuario()->getUsername(),
             'correo' => $perfil->getUsuario()->getCorreo(),
+            'imagen'=> $perfil->getImagen(),
         ];
 
         return $this->json($result, Response::HTTP_OK);
@@ -563,6 +565,7 @@ class UsuarioController extends AbstractController
                     'fecha_nacimiento' => $perfil->getFechaNacimiento()->format('Y-m-d'),
                     'telefono' => $perfil->getTelefono(),
                     'usuario' => $perfil->getUsuario()->getUsername(),
+                    'imagen'=> $perfil->getImagen(),
                 ],
                 'pedidos' => $pedidosConLineas,
             ];
@@ -613,6 +616,8 @@ class UsuarioController extends AbstractController
                     'fecha_nacimiento' => $perfil->getFechaNacimiento()->format('Y-m-d'),
                     'telefono' => $perfil->getTelefono(),
                     'usuario' => $perfil->getUsuario()->getUsername(),
+                    'imagen'=> $perfil->getImagen(),
+                    'correo'=> $perfil->getUsuario()->getCorreo(),
                 ],
                 'pedidos' => $pedidosConLineas,
             ];

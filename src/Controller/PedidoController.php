@@ -84,60 +84,6 @@ class PedidoController extends AbstractController
         return $this->json($data);
     }
 
-//    #[Route('/crear', name: 'crear_pedido', methods: ['POST'])]
-//    public function crear(Request $request, SerializerInterface $serializer): JsonResponse
-//    {
-//        // Decodificar el JSON en un DTO
-//        try {
-//            /** @var CrearPedidoLineaPedidoDTO $crearPedidoLineaPedidoDTO */
-//            $crearPedidoLineaPedidoDTO = $serializer->deserialize($request->getContent(), CrearPedidoLineaPedidoDTO::class, 'json');
-//        } catch (\Exception $e) {
-//            return $this->json(['error' => 'Datos inválidos'], JsonResponse::HTTP_BAD_REQUEST);
-//        }
-//
-//        // Buscar el perfil del pedido
-//        $perfil = $this->perfilRepository->find($crearPedidoLineaPedidoDTO->perfilId);
-//        if (!$perfil) {
-//            return $this->json(['error' => 'Perfil no encontrado'], JsonResponse::HTTP_NOT_FOUND);
-//        }
-//
-//        // Crear el pedido
-//        $pedido = new Pedido();
-//        $pedido->setFecha(new \DateTime());
-//        $pedido->setEstado($crearPedidoLineaPedidoDTO->estado);
-//        $pedido->setPerfil($perfil);
-//
-//        $pagoTotal = 0; // Variable para calcular el pago total del pedido
-//
-//        // Procesar las líneas de pedido
-//        foreach ($crearPedidoLineaPedidoDTO->lineasPedido as $lineaDTO) {
-//            $producto = $this->productoRepository->find($lineaDTO->productoId);
-//            if (!$producto) {
-//                return $this->json(['error' => 'Producto no encontrado: ' . $lineaDTO->productoId], JsonResponse::HTTP_NOT_FOUND);
-//            }
-//
-//            // Calcular el precio de la línea: precio del producto * cantidad
-//            $precioLinea = $producto->getPrecio() * $lineaDTO->cantidad;
-//            $pagoTotal += $precioLinea; // Sumar el precio al total del pedido
-//
-//            $lineaPedido = new LineaPedido();
-//            $lineaPedido->setCantidad($lineaDTO->cantidad);
-//            $lineaPedido->setPrecio($precioLinea); // Asignar el precio calculado
-//            $lineaPedido->setProducto($producto);
-//            $lineaPedido->setPedido($pedido);
-//
-//            $this->em->persist($lineaPedido);
-//        }
-//
-//        // Asignar el pago total al pedido
-//        $pedido->setPagoTotal($pagoTotal);
-//
-//        // Guardar el pedido y las líneas en la base de datos
-//        $this->em->persist($pedido);
-//        $this->em->flush();
-//
-//        return $this->json(['message' => 'Pedido creado correctamente', 'id' => $pedido->getId()], JsonResponse::HTTP_CREATED);
-//    }
 
     #[Route('/eliminar/{id}', name: 'eliminar_pedido', methods: ['DELETE'])]
     public function eliminarPedido(int $id): JsonResponse
@@ -446,7 +392,9 @@ class PedidoController extends AbstractController
 
         unlink($pdfPath);
 
-    }private function generarPdfPedido(Pedido $pedido, string $productosComprados, float $total): string
+    }
+
+    private function generarPdfPedido(Pedido $pedido, string $productosComprados, float $total): string
 {
     $options = new Options();
     $options->set('defaultFont', 'Arial');
