@@ -37,6 +37,10 @@ class ProductoController extends AbstractController
         $this->serializer = $serializer;
     }
 
+    /**
+     * mostrar todos los productos
+     * @return Response
+     */
     #[Route('/gestor/mostrar', name: 'app_producto', methods: ['GET'])]
     public function index(): Response
     {
@@ -96,35 +100,15 @@ class ProductoController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
-//    #[Route('/crear', name: 'app_producto_crear', methods: ['POST'])]
-//    public function crearProducto(Request $request, EntityManagerInterface $em): JsonResponse
-//    {
-//        $datos = json_decode($request->getContent(), true);
-//
-//        if (!isset($datos['nombre'], $datos['descripcion'], $datos['precio'], $datos['categoria'], $datos['plataforma'], $datos['imagen'])) {
-//            return $this->json(['message' => 'Faltan datos obligatorios'], Response::HTTP_BAD_REQUEST);
-//        }
-//
-//        $codigoJuego = Uuid::uuid4()->toString();
-//
-//        $producto = new Producto();
-//        $producto->setNombre($datos['nombre']);
-//        $producto->setDescripcion($datos['descripcion']);
-//        $producto->setDisponibilidad($datos['disponibilidad'] ?? true);
-//        $producto->setPlataforma(Plataforma::from($datos['plataforma']));
-//        $producto->setPrecio(floatval($datos['precio']));
-//        $producto->setCategoria(Categoria::from($datos['categoria']));
-//        $producto->setCodigoJuego($codigoJuego);
-//        $producto->setImagen($datos['imagen']);
-//
-//        $em->persist($producto);
-//        $em->flush();
-//
-//        return $this->json(['message' => 'Producto creado correctamente'], Response::HTTP_CREATED);
-//    }
-
-
-    // src/Controller/ProductoController.php
+    /**
+     * Editar un producto siendo gestor
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param Producto $producto
+     * @param ListaDeseosRepository $listaDeseosRepository
+     * @param MailerInterface $mailer
+     * @return JsonResponse
+     */
 
     #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['PUT'])]
     #[IsGranted('ROLE_GESTOR')]
@@ -239,6 +223,12 @@ class ProductoController extends AbstractController
         return $this->json($productos);
     }
 
+    /**
+     * Crear un producto siendo gestor, los productos de la categoría periféricos no tienen código de juego
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/gestor/crear', name: 'app_producto_crear_gestor', methods: ['POST'])]
     #[IsGranted('ROLE_GESTOR')]
     public function crearProductoGestor(Request $request, EntityManagerInterface $em): JsonResponse
@@ -276,7 +266,6 @@ class ProductoController extends AbstractController
 
     }
 
-    // src/Controller/ProductoController.php
 
     #[Route('/gestor/descuento/{id}', name: 'app_producto_descuento', methods: ['PUT'])]
     #[IsGranted('ROLE_GESTOR')]
@@ -314,21 +303,6 @@ class ProductoController extends AbstractController
             'precio_final' => round($precioConDescuento, 2)
         ], Response::HTTP_OK);
     }
-
-
-
-    #[Route('/test', name: 'app_producto_test', methods: ['GET'])]
-    public function test(): Response
-    {
-        /** @var Usuario $usuario */
-        $usuario = $this->getUser();
-
-
-        return $this->json(['user' => $usuario]);
-    }
-
-
-
 
 
 }
