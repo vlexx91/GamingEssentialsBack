@@ -25,6 +25,10 @@ class PerfilController extends AbstractController
         $this->perfilRepository = $perfilRepository;
     }
 
+    /**
+     * Find all Perfiles
+     * @return Response
+     */
     #[Route('', name: 'app_perfil' , methods: ['GET'])]
     public function index(): Response
     {
@@ -33,6 +37,13 @@ class PerfilController extends AbstractController
         return $this->json($perfil);
     }
 
+    /**
+     * Crear un perfil y un usuario
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     * @throws \DateMalformedStringException
+     */
     #[Route('/crear', name: 'perfil_crear', methods: ['POST'])]
     public function crearDto(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -64,6 +75,16 @@ class PerfilController extends AbstractController
         return $this->json(['message' => 'Usuario y Perfil creados correctamente'], Response::HTTP_CREATED);
     }
 
+    /**
+     * editar un perfil y un usuario por el id
+     * @param int $id
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param PerfilRepository $perfilRepository
+     * @param UserPasswordHasherInterface $passwordHasher
+     * @return JsonResponse
+     * @throws \DateMalformedStringException
+     */
 
     #[Route('/editar/{id}', name: 'perfil_editar', methods: ['PUT'])]
     public function edit(int $id, Request $request, EntityManagerInterface $em, PerfilRepository $perfilRepository, UserPasswordHasherInterface $passwordHasher): JsonResponse
@@ -171,8 +192,11 @@ class PerfilController extends AbstractController
     }
 
 
-
-
+    /**
+     * Buscar un perfil por el id
+     * @param int $id
+     * @return JsonResponse
+     */
     #[Route('/{id}', name: 'perfil_buscar', methods: ['GET'])]
     public function buscarPorId(int $id): JsonResponse
     {
