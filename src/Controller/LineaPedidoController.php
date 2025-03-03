@@ -23,6 +23,10 @@ class LineaPedidoController extends AbstractController
         $this->productoRepository = $productoRepository;
     }
 
+    /**
+     * Find all LineaPedidos
+     * @return Response
+     */
     #[Route('', name: 'app_linea_pedido', methods: ['GET'])]
     public function index(): Response
     {
@@ -31,7 +35,6 @@ class LineaPedidoController extends AbstractController
         return $this->json($lineaPedido);
     }
 
-    // Método para obtener todas las líneas de pedido asociadas a un producto
     #[Route('/producto/{id}', name: 'linea_pedido_by_producto', methods: ['GET'])]
     public function findByProducto(int $id, SerializerInterface $serializer): JsonResponse
     {
@@ -46,8 +49,6 @@ class LineaPedidoController extends AbstractController
         if (empty($lineasPedido)) {
             return $this->json(['message' => 'No hay líneas de pedido asociadas a este producto'], Response::HTTP_OK);
         }
-
-//        $jsonData = $serializer->serialize($lineasPedido, 'json', ['groups' => ['linea_pedido']]);
 
         return $this->json($lineasPedido, Response::HTTP_OK);
     }
