@@ -798,7 +798,7 @@ class UsuarioController extends AbstractController
 
 
     /**
-     * Metodo para verificar si la contraseña proporcionada por el usuario autenticado es válida.
+     * Metodo para verificar si la contraseña proporcionada por el usuario autenticado es válida(para el perfil del usuario).
      *
      * @param Request $request
      * @param UserPasswordHasherInterface $passwordHasher
@@ -818,7 +818,7 @@ class UsuarioController extends AbstractController
     }
 
     /**
-     * Metodo para cambiar la contraseña del usuario autenticado.
+     * Metodo para cambiar la contraseña del usuario autenticado(para el perfil del usuario).
      *
      * @param Request $request
      * @param EntityManagerInterface $em

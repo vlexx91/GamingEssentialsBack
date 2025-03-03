@@ -30,12 +30,7 @@ class ProductoController extends AbstractController
     private LineaPedidoRepository $lineaPedidoRepository;
     private SerializerInterface $serializer;
 
-    /**
-     * constructor de ProductoController.
-     * @param ProductoRepository $productoRepository
-     * @param LineaPedidoRepository $lineaPedidoRepository
-     * @param SerializerInterface $serializer
-     */
+
     public function __construct(ProductoRepository $productoRepository, LineaPedidoRepository $lineaPedidoRepository, SerializerInterface $serializer)
     {
         $this->productoRepository = $productoRepository;
