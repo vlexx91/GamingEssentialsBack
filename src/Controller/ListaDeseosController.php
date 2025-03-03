@@ -16,6 +16,15 @@ use Symfony\Component\HttpFoundation\Request;
 #[Route('/api/lista-deseos')]
 class ListaDeseosController extends AbstractController
 {
+    /**
+     * Metodo que agrega un producto a la lista de deseados
+     *
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param JWTTokenManagerInterface $jwtManager
+     * @return JsonResponse
+     */
+
     #[Route('/agregar', name: 'agregar_lista_deseos', methods: ['POST'])]
     public function agregar(Request $request, EntityManagerInterface $em, JWTTokenManagerInterface $jwtManager): JsonResponse
     {
@@ -41,7 +50,6 @@ class ListaDeseosController extends AbstractController
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Obtenemos el producto a agregar a la lista de deseos
         $data = json_decode($request->getContent(), true);
         $producto = $em->getRepository(Producto::class)->find($data['id_producto']);
 
@@ -49,7 +57,6 @@ class ListaDeseosController extends AbstractController
             return new JsonResponse(['message' => 'Producto no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        // Comprobamos si ya está en la lista de deseos
         $existingWishlist = $em->getRepository(ListaDeseos::class)->findOneBy([
             'usuario' => $usuario,
             'producto' => $producto,
@@ -59,7 +66,6 @@ class ListaDeseosController extends AbstractController
             return new JsonResponse(['message' => 'Este producto ya está en tu lista de deseos'], Response::HTTP_CONFLICT);
         }
 
-        // Creamos una nueva entrada en la lista de deseos
         $listaDeseos = new ListaDeseos();
         $listaDeseos->setUsuario($usuario);
         $listaDeseos->setProducto($producto);
@@ -69,6 +75,14 @@ class ListaDeseosController extends AbstractController
         return new JsonResponse(['message' => 'Producto agregado a la lista de deseos'], Response::HTTP_CREATED);
     }
 
+    /**
+     * Metodo que elimina un producto de la lista de deseados
+     *
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param JWTTokenManagerInterface $jwtManager
+     * @return JsonResponse
+     */
     #[Route('/eliminar', name: 'eliminar_lista_deseos', methods: ['DELETE'])]
     public function eliminar(Request $request, EntityManagerInterface $em, JWTTokenManagerInterface $jwtManager): JsonResponse
     {
@@ -116,6 +130,15 @@ class ListaDeseosController extends AbstractController
         return new JsonResponse(['message' => 'Producto eliminado de la lista de deseos'], Response::HTTP_OK);
     }
 
+
+    /**
+     * Metodo que muestra toda la lista de deseos asociada a un usuario a traves del token
+     *
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param JWTTokenManagerInterface $jwtManager
+     * @return JsonResponse
+     */
     #[Route('/listar', name: 'listar_lista_deseos', methods: ['GET'])]
     public function listar(Request $request, EntityManagerInterface $em, JWTTokenManagerInterface $jwtManager): JsonResponse
     {

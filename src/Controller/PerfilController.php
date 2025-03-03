@@ -103,8 +103,16 @@ class PerfilController extends AbstractController
         return $this->json(['message' => 'Perfil y Usuario actualizados correctamente'], Response::HTTP_OK);
     }
 
-    //Editar a través del token
 
+    /**
+     * Metodo para editar el perfil del usuario a traves de un token JWT.
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $em
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
+     */
     #[Route('/editarportoken', name: 'perfil_editar_token', methods: ['PUT'])]
     public function editByToken(
         Request $request,
@@ -144,7 +152,6 @@ class PerfilController extends AbstractController
 
         $datos = json_decode($request->getContent(), true);
 
-        // Validar que los datos requeridos existen antes de asignarlos
         if (!empty($datos['nombre'])) {
             $perfil->setNombre($datos['nombre']);
         }
@@ -164,7 +171,6 @@ class PerfilController extends AbstractController
             $perfil->setImagen($datos['imagenUrl']); // Nuevo campo para la imagen
         }
 
-        // Guardamos los cambios en la base de datos
         $em->flush();
 
         return $this->json(['message' => 'Perfil actualizado correctamente'], Response::HTTP_OK);

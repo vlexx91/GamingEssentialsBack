@@ -292,6 +292,14 @@ class UsuarioController extends AbstractController
     }
 
 
+    /**
+     * Metodo que a traves del token, obtiene el id del usuario
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
     #[Route('/idToken', name: 'id_token', methods: ['GET'])]
     public function obtenerIdDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
         $token = $request->headers->get('authorization');
@@ -316,11 +324,16 @@ class UsuarioController extends AbstractController
         return new JsonResponse(['user_id' => $user->getId()]);
     }
 
-    /**
-     * Mostrar Usuario y perfil con DTO
-     *
-     */
 
+    /**
+     * Metodo para obtener el perfil del usuario autenticado.
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
+     */
     #[Route('/mostrarPerfil', name: 'usuario_mostrar_uno', methods: ['GET'])]
     public function mostrarPerfil(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager, PerfilRepository $perfilRepository): JsonResponse{
         $token = $request->headers->get('authorization');
@@ -663,6 +676,15 @@ class UsuarioController extends AbstractController
         return $this->json($resultado, Response::HTTP_OK);
     }
 
+
+    /**
+     * Metodo para verificar si la contraseña proporcionada por el usuario autenticado es válida.
+     *
+     * @param Request $request
+     * @param UserPasswordHasherInterface $passwordHasher
+     * @param Security $security
+     * @return JsonResponse
+     */
     #[Route('/verificar-password', name: 'verificar_password', methods: ['POST'])]
     public function verificarPassword(Request $request, UserPasswordHasherInterface $passwordHasher, Security $security): JsonResponse {
         $datos = json_decode($request->getContent(), true);
@@ -675,6 +697,15 @@ class UsuarioController extends AbstractController
         return $this->json(['valid' => true], Response::HTTP_OK);
     }
 
+    /**
+     * Metodo para cambiar la contraseña del usuario autenticado.
+     *
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $passwordHasher
+     * @param Security $security
+     * @return JsonResponse
+     */
     #[Route('/cambiar-password', name: 'cambiar_password', methods: ['POST'])]
     public function cambiarPassword(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, Security $security): JsonResponse {
         $datos = json_decode($request->getContent(), true);
