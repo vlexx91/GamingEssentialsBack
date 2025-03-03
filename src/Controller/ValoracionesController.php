@@ -29,6 +29,11 @@ class ValoracionesController extends AbstractController
          $this->valoracionesRepository = $valoracionesRepository;
         $this->serializer = $serializer;
     }
+
+    /**
+     * find all de valoraciones
+     * @return Response
+     */
     #[Route('/find', name: 'app_valoraciones' , methods: ['GET'])]
     public function index(): Response
     {
