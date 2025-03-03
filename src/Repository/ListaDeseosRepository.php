@@ -43,6 +43,12 @@ class ListaDeseosRepository extends ServiceEntityRepository
 
     // src/Repository/ListaDeseosRepository.php
 
+    /**
+     * Query para obtener los usuarios por producto.
+     *
+     * @param int $productoId
+     * @return array
+     */
     public function findUsuariosPorProducto(int $productoId): array
     {
         return $this->createQueryBuilder('ld')

@@ -59,8 +59,11 @@ class PedidoController extends AbstractController
         return $this->json($pedido);
     }
 
-
-
+    /**
+     * Metodo para obtener todos los pedidos
+     *
+     * @return JsonResponse
+     */
     #[Route('/findall', name: 'todos_pedidos', methods: ['GET'])]
     public function findAll(): JsonResponse
     {
@@ -107,7 +110,13 @@ class PedidoController extends AbstractController
         return $this->json(['message' => 'Pedido eliminado correctamente'], JsonResponse::HTTP_OK);
     }
 
-
+    /**
+     * Ruta nueva para obtener pedidos por id_perfil
+     *
+     * @param int $perfilId
+     * @param SerializerInterface $serializer
+     * @return JsonResponse
+     */
     #[Route('/perfil/{perfilId}', name: 'app_pedido_by_perfil', methods: ['GET'])]
     public function findByPerfil(int $perfilId, SerializerInterface $serializer): JsonResponse
     {
@@ -455,7 +464,12 @@ class PedidoController extends AbstractController
     return $pdfPath;
 }
 
-
+    /**
+     * Metodo para obtener todos los pedidos, este solo lo emplea el admin
+     *
+     * @param SerializerInterface $serializer
+     * @return JsonResponse
+     */
     #[Route('/totalpedidos', name: 'total_pedidos1', methods: ['GET'])]
     public function verTodosPedidos(SerializerInterface $serializer): JsonResponse {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');

@@ -761,7 +761,7 @@ class UsuarioController extends AbstractController
     }
 
     /**
-     * Obtener los usuarios siendo administrador
+     * Obtener todos los perfiles de los clientes, este metodo solo lo puede usar un administrador
      * @param UsuarioRepository $usuarioRepository
      * @return JsonResponse
      */
@@ -819,6 +819,7 @@ class UsuarioController extends AbstractController
     }
 
     /**
+     * Cambiar el estado de un cliente (activo o inactivo), este metodo solo lo puede usar un administrador.
      *
      * @param int $id
      * @param Request $request

@@ -43,6 +43,12 @@ class ValoracionesController extends AbstractController
         return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
 
+    /**
+     * Muestra todas las valoraciones activadas de un producto.
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
     #[Route('/producto/{id}/activadas', name: 'valoraciones_activadas_por_producto', methods: ['GET'])]
     public function obtenerValoracionesActivadasPorProducto(int $id): JsonResponse
     {
@@ -58,10 +64,11 @@ class ValoracionesController extends AbstractController
     }
 
     /**
+     * crea una valoracion
+     *
      * @param Request $request
      * @param EntityManagerInterface $em
      * @return JsonResponse
-     * crea una valoracion
      */
     #[Route('/crear', name: 'valoraciones_crear', methods: ['POST'])]
     public function crearValoracion(Request $request, EntityManagerInterface $em): JsonResponse
@@ -104,15 +111,13 @@ class ValoracionesController extends AbstractController
         return $this->json(['message' => 'Valoración creada correctamente'], Response::HTTP_CREATED);
     }
 
-
-
     /**
+     * metodo eliminar valoracion
+     *
      * @param int $id
      * @param EntityManagerInterface $em
      * @return JsonResponse
-     * metodo eliminar valoracion
      */
-
     #[Route('/eliminar/{id}', name: 'valoraciones_eliminar', methods: ['DELETE'])]
     public function eliminarValoracion(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -129,9 +134,10 @@ class ValoracionesController extends AbstractController
     }
 
     /**
+     * metodo que crea promedio de las valoraciones en productos
+     *
      * @param EntityManagerInterface $em
      * @return JsonResponse
-     * metodo que crea promedio de las valoraciones en productos
      */
     #[Route('/promedio/{id}', name: 'valoraciones_promedio_producto', methods: ['GET'])]
     public function calcularPromedioPorProducto(int $id, EntityManagerInterface $em): JsonResponse
@@ -158,6 +164,14 @@ class ValoracionesController extends AbstractController
         return $this->json(['promedio' => $promedio], Response::HTTP_OK);
     }
 
+    /**
+     * metodo para editar una valoracion
+     *
+     * @param int $id
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/editar/{id}', name: 'valoraciones_editar', methods: ['PUT'])]
     public function editarValoracion(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -188,8 +202,10 @@ class ValoracionesController extends AbstractController
 
     /**
      * metodo para sacar top 5 productos mejor valorados
+     *
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
      */
-
     #[Route('/topcinco', name: 'top_cinco', methods: ['GET'])]
     public function obtenerTopValorados(EntityManagerInterface $em): JsonResponse
     {
@@ -237,7 +253,13 @@ class ValoracionesController extends AbstractController
         return $this->json(['top_5_productos' => $topProductosLimpios], Response::HTTP_OK);
     }
 
-
+    /**
+     * metodo para cambiar el estado de una valoracion, solo esta disponible para gestores.
+     *
+     * @param int $id
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/desactivar/{id}', name: 'valoraciones_desactivar', methods: ['PUT'])]
     #[isGranted('ROLE_GESTOR')]
     public function cambiarEstadoValoracion(int $id, EntityManagerInterface $em): JsonResponse
@@ -256,6 +278,12 @@ class ValoracionesController extends AbstractController
         return $this->json(['message' => $mensaje], Response::HTTP_OK);
     }
 
+    /**
+     * metodo para ver todas las valoraciones, este metodo solo esta disponible para gestores.
+     *
+     * @param SerializerInterface $serializer
+     * @return JsonResponse
+     */
     #[Route('/gestor/valoraciones', name: 'total_pedidos', methods: ['GET'])]
     #[isGranted('ROLE_GESTOR')]
     public function verTodosPedidos(SerializerInterface $serializer): JsonResponse {

@@ -30,6 +30,12 @@ class ProductoController extends AbstractController
     private LineaPedidoRepository $lineaPedidoRepository;
     private SerializerInterface $serializer;
 
+    /**
+     * constructor de ProductoController.
+     * @param ProductoRepository $productoRepository
+     * @param LineaPedidoRepository $lineaPedidoRepository
+     * @param SerializerInterface $serializer
+     */
     public function __construct(ProductoRepository $productoRepository, LineaPedidoRepository $lineaPedidoRepository, SerializerInterface $serializer)
     {
         $this->productoRepository = $productoRepository;
@@ -50,6 +56,10 @@ class ProductoController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
+    /**
+     * Muestra todos los productos en la tienda.
+     * @return Response
+     */
     #[Route('/cliente', name: 'app_producto_cliente' , methods: ['GET'])]
     public function indexCliente(): Response
     {
@@ -60,6 +70,12 @@ class ProductoController extends AbstractController
 
     }
 
+    /**
+     * Muestra la información de un producto.
+     *
+     * @param int $id
+     * @return Response
+     */
     #[Route('/detalle/{id}', name: 'app_producto_detalle', methods: ['GET'])]
     public function productoInfo(int $id): Response
     {
@@ -73,6 +89,12 @@ class ProductoController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
+    /**
+     * Busca productos en la tienda mediante los diversos filtros.
+     *
+     * @param Request $request
+     * @return Response
+     */
     #[Route('/buscar', name: 'app_producto_buscar', methods: ['GET'])]
     public function buscar(Request $request): Response
     {
@@ -110,6 +132,16 @@ class ProductoController extends AbstractController
      * @return JsonResponse
      */
 
+    /**
+     * Edita la información de un producto, solo esta disponible para los gestores.
+     *
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param Producto $producto
+     * @param ListaDeseosRepository $listaDeseosRepository
+     * @param MailerInterface $mailer
+     * @return JsonResponse
+     */
     #[Route('/gestor/editar/{id}', name: 'app_producto_editar', methods: ['PUT'])]
     #[IsGranted('ROLE_GESTOR')]
     public function editarProducto(Request $request, EntityManagerInterface $em, Producto $producto, ListaDeseosRepository $listaDeseosRepository, MailerInterface $mailer): JsonResponse
@@ -162,6 +194,15 @@ class ProductoController extends AbstractController
         return $this->json(['message' => 'Producto editado correctamente'], Response::HTTP_OK);
     }
 
+    /**
+     * Envía una notificación al usuario cuando un producto de su lista de deseos está disponible.
+     *
+     * @param $listaDeseos
+     * @param $producto
+     * @param MailerInterface $mailer
+     * @return void
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
     private function enviarNotificacion($listaDeseos, $producto, MailerInterface $mailer)
     {
         $usuario = $listaDeseos->getUsuario();
@@ -177,6 +218,14 @@ class ProductoController extends AbstractController
         $mailer->send($email);
     }
 
+    /**
+     * ESTA FUNCION NO SE EMPLEA EN EL PROYECTO, REVISAR PARA ELIMINAR
+     * Elimina un producto de la tienda.
+     *
+     * @param int $id
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/eliminar/{id}', name: 'app_producto_eliminar', methods: ['DELETE'])]
     public function eliminarProducto(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -198,7 +247,11 @@ class ProductoController extends AbstractController
         return $this->json(['message' => 'Producto eliminado correctamente'], Response::HTTP_OK);
     }
 
-
+    /**
+     * Muestra 15 productos de la tienda de forma aleatoria.
+     *
+     * @return Response
+     */
     #[Route('/aleatorios', name: 'app_producto_cliente_random', methods: ['GET'])]
     public function indexClienteRandom(): Response
     {
@@ -215,6 +268,12 @@ class ProductoController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, [], true);
     }
 
+    /**
+     * Muestra los 10 productos más vendidos de la tienda.
+     *
+     * @param ProductoRepository $productoRepository
+     * @return JsonResponse
+     */
     #[Route('/masvendidos', name: 'productos_mas_vendidos', methods: ['GET'])]
     public function productosMasVendidos(ProductoRepository $productoRepository): JsonResponse
     {
@@ -267,6 +326,14 @@ class ProductoController extends AbstractController
     }
 
 
+    /**
+     * Aplica un descuento a un producto, este metodo solo lo puede usar un gestor.
+     *
+     * @param int $id
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/gestor/descuento/{id}', name: 'app_producto_descuento', methods: ['PUT'])]
     #[IsGranted('ROLE_GESTOR')]
     public function crearDescuento(int $id, Request $request, EntityManagerInterface $em): JsonResponse

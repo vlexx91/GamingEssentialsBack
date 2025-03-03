@@ -49,6 +49,13 @@ class ValoracionesRepository extends ServiceEntityRepository
     }
 
     // src/Repository/ValoracionesRepository.php
+
+    /**
+     * Metodo para obtener las valoraciones por producto.
+     *
+     * @param int $productoId
+     * @return array
+     */
     public function findByProducto(int $productoId): array
     {
         return $this->createQueryBuilder('v')
