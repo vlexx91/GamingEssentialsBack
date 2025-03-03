@@ -125,6 +125,15 @@ class PerfilController extends AbstractController
     }
 
 
+    /**
+     * Metodo para editar el perfil del usuario a traves de un token JWT.
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $em
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
+     */
     #[Route('/editarportoken', name: 'perfil_editar_token', methods: ['PUT'])]
     public function editByToken(
         Request $request,

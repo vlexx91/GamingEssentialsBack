@@ -302,6 +302,15 @@ class ValoracionesController extends AbstractController
         return $this->json($data, Response::HTTP_OK);
     }
 
+    /**
+     * Metodo que lista las valoraciones activadas por un usuario autentificado
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @param ValoracionesRepository $valoracionesRepository
+     * @return JsonResponse
+     */
     #[Route('/mis-valoraciones', name: 'app_valoraciones_by_token', methods: ['GET'])]
     public function getValoracionesByToken(
         Request $request,
@@ -367,6 +376,14 @@ class ValoracionesController extends AbstractController
         return $this->json($data);
     }
 
+    /**
+     * Metodo que desactiva la valoracion especifica hecha por un usuario
+     *
+     * @param int $id
+     * @param EntityManagerInterface $entityManager
+     * @param ValoracionesRepository $valoracionesRepository
+     * @return JsonResponse
+     */
     #[Route('/{id}/desactivar', name: 'app_desactivar_valoracion', methods: ['PATCH'])]
     public function desactivarValoracion(
         int $id,

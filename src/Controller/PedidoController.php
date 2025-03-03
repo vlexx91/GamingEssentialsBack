@@ -92,6 +92,12 @@ class PedidoController extends AbstractController
     }
 
 
+    /**
+     * Metodo que elimina un usuario a traves de su id
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
     #[Route('/eliminar/{id}', name: 'eliminar_pedido', methods: ['DELETE'])]
     public function eliminarPedido(int $id): JsonResponse
     {
@@ -151,6 +157,16 @@ class PedidoController extends AbstractController
     }
 
 
+    /**
+     * Metodo que muestra los pedidos asociados a un Perfil a traves del token
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @param PerfilRepository $perfilRepository
+     * @param PedidoRepository $pedidoRepository
+     * @return JsonResponse
+     */
     #[Route('/perfilpedido', name: 'app_pedido_by_token', methods: ['GET'])]
     public function findByToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager, PerfilRepository $perfilRepository, PedidoRepository $pedidoRepository): JsonResponse
     {
@@ -212,6 +228,14 @@ class PedidoController extends AbstractController
         return $this->json($data);
     }
 
+
+    /**
+     * Metodo para ver los detalles dentro de cada pedido, es decir, sus lineas de pedido
+     *
+     * @param int $id
+     * @param PedidoRepository $pedidoRepository
+     * @return JsonResponse
+     */
     #[Route('/{id}/lineas', name: 'pedido_lineas', methods: ['GET'])]
     public function obtenerLineasDePedido(int $id, PedidoRepository $pedidoRepository): JsonResponse
     {
@@ -235,7 +259,7 @@ class PedidoController extends AbstractController
                     'nombre' => $producto->getNombre(),
                     'imagen' => $producto->getImagen(),
                     'precio' => $producto->getPrecio(),
-                    'codigo_juego' => $producto->getCodigoJuego(),
+                    'codigo_juego' => $producto->getCodigoJuego().'-'.uniqid(),
                 ]
             ];
         }
@@ -488,6 +512,12 @@ class PedidoController extends AbstractController
         return $this->json($response);
     }
 
+    /**
+     * Metodo que descarga el PDF de la compra desde el perfil del usuario para cada pedido.
+     * @param int $id
+     * @param EntityManagerInterface $em
+     * @return Response
+     */
     #[Route('/{id}/descargar-pdf', name: 'pedido_pdf')]
     public function descargarPdf(int $id, EntityManagerInterface $em): Response
     {
