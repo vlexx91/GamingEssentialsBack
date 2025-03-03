@@ -55,9 +55,19 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'El nombre de usuario ya está en uso'], Response::HTTP_CONFLICT);
         }
 
-        $esxistingEmail = $em->getRepository(Usuario::class)->findOneBy(['correo' => $datos['correo']]);
-        if ($esxistingEmail) {
+        $existingEmail = $em->getRepository(Usuario::class)->findOneBy(['correo' => $datos['correo']]);
+        if ($existingEmail) {
             return $this->json(['message' => 'El correo ya está en uso'], Response::HTTP_CONFLICT);
+        }
+
+        $existingDni = $em->getRepository(Perfil::class)->findOneBy(['dni' => $datos['dni']]);
+        if ($existingDni) {
+            return $this->json(['message' => 'El dni ya está en uso'], Response::HTTP_CONFLICT);
+        }
+
+        $existingTelefono = $em->getRepository(Perfil::class)->findOneBy(['telefono' => $datos['telefono']]);
+        if ($existingTelefono) {
+            return $this->json(['message' => 'El telefono ya está en uso'], Response::HTTP_CONFLICT);
         }
 
         $fechaNacimiento = new \DateTime($datos['fechaNacimiento']);
