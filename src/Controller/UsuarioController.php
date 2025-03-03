@@ -424,6 +424,15 @@ class UsuarioController extends AbstractController
     }
 
 
+    /**
+     * Editar los datos de un gestor.
+     *
+     * @param int $id
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $userPasswordHasher
+     * @return JsonResponse
+     */
     #[Route('/editarGestor/{id}', name: 'usuario_editar_gestor', methods: ['PUT'])]
     public function editarGestor(int $id, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
@@ -448,6 +457,11 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Gestor editado correctamente'], Response::HTTP_OK);
     }
 
+    /**
+     * Muestra todos los gestores.
+     *
+     * @return JsonResponse
+     */
     #[Route('/gestores', name: 'usuario_listar_gestores', methods: ['GET'])]
     public function listarGestores(): JsonResponse
     {
@@ -460,7 +474,13 @@ class UsuarioController extends AbstractController
         ]);
     }
 
-
+    /**
+     * Elimina un gestor.
+     *
+     * @param int $id
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/eliminarGestor/{id}', name: 'usuario_eliminar_gestor', methods: ['DELETE'])]
     public function eliminarGestor(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -653,6 +673,11 @@ class UsuarioController extends AbstractController
         return $this->json(['usuarioId' => $usuario->getId()], Response::HTTP_OK);
     }
 
+    /**
+     * Obtener todos los perfiles de los clientes, este metodo solo lo puede usar un administrador
+     * @param UsuarioRepository $usuarioRepository
+     * @return JsonResponse
+     */
     #[Route('/listaclientes', name:'obtener_perfiles', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     public function obtenerPerfiles(UsuarioRepository $usuarioRepository): JsonResponse
@@ -705,6 +730,15 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Contraseña cambiada con éxito'], Response::HTTP_OK);
     }
 
+    /**
+     * Cambiar el estado de un cliente (activo o inactivo), este metodo solo lo puede usar un administrador.
+     *
+     * @param int $id
+     * @param Request $request
+     * @param UsuarioRepository $usuarioRepository
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/cliente/{id}/estado', name: 'desactivar_perfiles', methods:['PATCH'])]
     #[IsGranted('ROLE_ADMIN')]
     public function desactivarPerfiles(int $id, Request $request, UsuarioRepository $usuarioRepository, EntityManagerInterface $em): JsonResponse

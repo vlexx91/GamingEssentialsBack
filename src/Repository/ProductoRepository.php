@@ -43,6 +43,11 @@ class ProductoRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Query que busca todos los productos disponibles.
+     *
+     * @return array
+     */
     public function findAvailableProducts(): array
     {
         return $this->createQueryBuilder('p')
@@ -52,6 +57,12 @@ class ProductoRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Query que busca un producto por un id.
+     *
+     * @param int $id
+     * @return array
+     */
     public function findById(int $id): ?Producto
     {
         return $this->createQueryBuilder('p')
@@ -61,6 +72,11 @@ class ProductoRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    /**
+     * Query que busca un producto por los diferentes filtros que se encuentran en la tienda.
+     * @param array $criterios
+     * @return mixed
+     */
     public function findByCriteria(array $criterios)
     {
         $qb = $this->createQueryBuilder('p');
@@ -104,6 +120,11 @@ class ProductoRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * Query que busca los 10 productos más vendidos.
+     *
+     * @return mixed
+     */
     public function findTop5MasVendidos()
     {
         return $this->createQueryBuilder('p')
