@@ -27,8 +27,14 @@ class ListaDeseosController extends AbstractController
      */
 
     #[Route('/agregar', name: 'agregar_lista_deseos', methods: ['POST'])]
-    public function agregar(Request $request, EntityManagerInterface $em, JWTTokenManagerInterface $jwtManager): JsonResponse
+    public function agregar(Request $request, EntityManagerInterface $em, JWTTokenManagerInterface $jwtManager, Security $security): JsonResponse
     {
+        $usuario = $security->getUser();
+
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
+        }
+
         $token = $request->headers->get('Authorization');
         if (!$token) {
             return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
