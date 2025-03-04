@@ -24,7 +24,7 @@ TypeScript
 
 Symfony (Backend)
 
-Angular (Frontend)
+Angular CLI 19.9 (Frontend)
 
 Tailwind CSS (Estilos)
 
@@ -46,41 +46,41 @@ Node.js 19.9
 
 ### Clonar el Repositorio
 
- git clone https://github.com/vlexx91/GamingEssentialsBack.git
+ ```git clone https://github.com/vlexx91/GamingEssentialsBack.git```
 
 ### Configuración del Backend
 
 **Navega al directorio del backend:**
 
-cd backend
+```cd backend```
 
 **Instala las dependencias con Composer:**
 
-composer install
+```composer install```
 
 Configura el archivo .env con las credenciales de la base de datos y servicios externos.
 
 **Ejecuta las migraciones:**
 
-php bin/console doctrine:migrations:migrate
+```php bin/console doctrine:migrations:migrate```
 
 **Inicia el servidor:**
 
-symfony server:start
+```symfony server:start```
 
 ### Configuración del Frontend
 
 **Navega al directorio del frontend:**
 
-cd frontend
+```cd frontend```
 
 **Instala las dependencias con npm:**
 
-npm install
+```npm install```
 
 **Inicia el servidor de desarrollo:**
 
-ng serve --proxy-config proxy.conf.json
+```ng serve --proxy-config proxy.conf.json```
 
 
 ## 📌 Funcionalidades Principales
