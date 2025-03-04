@@ -2,7 +2,7 @@ nelmio_cors:
     defaults:
         origin_regex: true
         allow_credentials: true
-        allow_origin: ['http://localhost:4200']
+        allow_origin: ['http://localhost:4200', 'https://gamingessentialsfront.onrender.com']
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
         allow_headers: ['Content-Type', 'Authorization']
         expose_headers: ['Link']
