@@ -14,6 +14,17 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class NotificationController extends AbstractController
 {
+    public function __construct(EntityManagerInterface $em)
+    {
+        $this->entityManager = $em;
+    }
+
+    /**
+     * Notificaciones de productos disponibles que esten en la lista de deseos del usuario
+     * @param ListaDeseosRepository $listaDeseosRepository
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
     #[Route('', name: 'notificaciones_1', methods: ['GET'])]
     public function obtenerNotificaciones(ListaDeseosRepository $listaDeseosRepository, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -43,6 +54,13 @@ class NotificationController extends AbstractController
         return $this->json($notificaciones);
     }
 
+    /**
+     * Eliminar notificación de un producto (cambiar estado de notificación a false)
+     * @param int $idProducto
+     * @param ListaDeseosRepository $listaDeseosRepository
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
     #[Route('/{idProducto}', name: 'eliminar_notificaciones',methods: ['PUT'])]
     public function eliminarNotificacion(int $idProducto, ListaDeseosRepository $listaDeseosRepository, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -53,7 +71,6 @@ class NotificationController extends AbstractController
 
         if ($deseo) {
             $deseo->setNotificacion(false);
-//            $entityManager->persist($deseo);
             $entityManager->flush();
 
             return $this->json(['mensaje' => 'Notificación actualizada correctamente.'], JsonResponse::HTTP_OK);

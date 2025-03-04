@@ -39,7 +39,7 @@ class PedidoController extends AbstractController
 
     public function __construct(PedidoRepository $pedidoRepository, EntityManagerInterface $em, PerfilRepository $perfilRepository,ProductoRepository $productoRepository)
     {
-        date_default_timezone_set('Europe/Madrid'); // Set the timezone
+        date_default_timezone_set('Europe/Madrid');
 
         $this->pedidoRepository = $pedidoRepository;
         $this->em = $em;
@@ -47,6 +47,10 @@ class PedidoController extends AbstractController
         $this->productoRepository = $productoRepository;
     }
 
+    /**
+     * Find all Pedidos
+     * @return Response
+     */
     #[Route('', name: 'app_pedido')]
     public function index(): Response
     {
@@ -63,10 +67,8 @@ class PedidoController extends AbstractController
     #[Route('/findall', name: 'todos_pedidos', methods: ['GET'])]
     public function findAll(): JsonResponse
     {
-        // Obtener todos los pedidos
         $pedidos = $this->pedidoRepository->findAll();
 
-        // Preparar la respuesta
         $data = [];
         foreach ($pedidos as $pedido) {
             $data[] = [
@@ -90,6 +92,12 @@ class PedidoController extends AbstractController
     }
 
 
+    /**
+     * Metodo que elimina un usuario a traves de su id
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
     #[Route('/eliminar/{id}', name: 'eliminar_pedido', methods: ['DELETE'])]
     public function eliminarPedido(int $id): JsonResponse
     {
@@ -99,7 +107,6 @@ class PedidoController extends AbstractController
             return $this->json(['error' => 'Pedido no encontrado'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        // Eliminar el pedido (Doctrine se encargará de eliminar las líneas de pedido por cascada)
         $this->em->remove($pedido);
         $this->em->flush();
 
@@ -116,21 +123,18 @@ class PedidoController extends AbstractController
     #[Route('/perfil/{perfilId}', name: 'app_pedido_by_perfil', methods: ['GET'])]
     public function findByPerfil(int $perfilId, SerializerInterface $serializer): JsonResponse
     {
-        // Buscar el perfil por id_perfil
         $perfil = $this->perfilRepository->find($perfilId);
 
         if (!$perfil) {
             return $this->json(['error' => 'Perfil no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        // Buscar los pedidos asociados al perfil
         $pedidos = $this->pedidoRepository->findBy(['perfil' => $perfil]);
 
         if (empty($pedidos)) {
             return $this->json(['message' => 'No se encontraron pedidos para este perfil'], Response::HTTP_OK);
         }
 
-        // Serializar los pedidos con los grupos
         $data = [];
         foreach ($pedidos as $pedido) {
             $data[] = [
@@ -149,25 +153,30 @@ class PedidoController extends AbstractController
                 ],
             ];
         }
-        // Devolver los pedidos en formato JSON
         return $this->json($data);
     }
 
-    //Otro metodo para encontrar los pedidos por perfil(Este es el que se usa en el perfil del cliente)
 
+    /**
+     * Metodo que muestra los pedidos asociados a un Perfil a traves del token
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @param PerfilRepository $perfilRepository
+     * @param PedidoRepository $pedidoRepository
+     * @return JsonResponse
+     */
     #[Route('/perfilpedido', name: 'app_pedido_by_token', methods: ['GET'])]
     public function findByToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager, PerfilRepository $perfilRepository, PedidoRepository $pedidoRepository): JsonResponse
     {
-        // Obtener el token del encabezado Authorization
         $token = $request->headers->get('Authorization');
         if (!$token) {
             return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Limpiar el token (eliminar el "Bearer ")
         $formatToken = str_replace('Bearer ', '', $token);
 
-        // Decodificar el token
         try {
             $finalToken = $jwtManager->parse($formatToken);
             $username = $finalToken['username'] ?? null;
@@ -179,28 +188,24 @@ class PedidoController extends AbstractController
             return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
         }
 
-        // Buscar el usuario por su username
         $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
 
         if (!$user) {
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Obtener el perfil del usuario
         $perfil = $perfilRepository->findOneBy(['usuario' => $user->getId()]);
 
         if (!$perfil) {
             return new JsonResponse(['message' => 'Profile not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Buscar los pedidos asociados al perfil
         $pedidos = $pedidoRepository->findBy(['perfil' => $perfil],['fecha' => 'DESC']);
 
         if (empty($pedidos)) {
             return new JsonResponse(['message' => 'No orders found for this profile'], Response::HTTP_OK);
         }
 
-        // Serializar los pedidos con los grupos
         $data = [];
         foreach ($pedidos as $pedido) {
             $data[] = [
@@ -220,10 +225,17 @@ class PedidoController extends AbstractController
             ];
         }
 
-        // Devolver los pedidos en formato JSON
         return $this->json($data);
     }
 
+
+    /**
+     * Metodo para ver los detalles dentro de cada pedido, es decir, sus lineas de pedido
+     *
+     * @param int $id
+     * @param PedidoRepository $pedidoRepository
+     * @return JsonResponse
+     */
     #[Route('/{id}/lineas', name: 'pedido_lineas', methods: ['GET'])]
     public function obtenerLineasDePedido(int $id, PedidoRepository $pedidoRepository): JsonResponse
     {
@@ -233,7 +245,6 @@ class PedidoController extends AbstractController
             return new JsonResponse(['message' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        // Obtener las líneas de pedido asociadas
         $lineasPedido = $pedido->getLineaPedidos();
         $lineasPedidoArray = [];
 
@@ -248,7 +259,7 @@ class PedidoController extends AbstractController
                     'nombre' => $producto->getNombre(),
                     'imagen' => $producto->getImagen(),
                     'precio' => $producto->getPrecio(),
-                    'codigo_juego' => $producto->getCodigoJuego(),
+                    'codigo_juego' => $producto->getCodigoJuego().'-'.uniqid(),
                 ]
             ];
         }
@@ -256,42 +267,12 @@ class PedidoController extends AbstractController
         return new JsonResponse($lineasPedidoArray, Response::HTTP_OK);
     }
 
-    //POR REALIZAR
-//    #[Route('/realizar', name: 'realizar_pedido', methods: ['POST'])]
-//    public function realizarPedido(Request $request): JsonResponse
-//    {
-//        $datos = json_decode($request->getContent(), true);
-//        $pedido = new Pedido();
-//        $total = 0.0;
-//
-//        $cliente = $this->perfilRepository->findPerfilByUsuarioId($datos->getIdUsuario());
-//        $pedido->setPerfil($cliente);
-//        $pedido->setFecha(new \DateTime());
-//
-//        $this->em->persist($pedido);
-//        $this->em->flush();
-//
-//        foreach ($datos->getProductos() as $productoCarritoDTO) {
-//            $lineaPedido = new LineaPedido();
-//            $lineaPedido->setPedido($pedido);
-//            $lineaPedido->setCantidad($productoCarritoDTO->getCantidad());
-////            $lineaPedido->setProducto($this->productoService->getProductoById($productoCarritoDTO->getIdProducto()));
-//            $lineaPedido->setPrecio($productoCarritoDTO->getPrecioUnitario());
-//            $lineaPedido->setProducto($this->productoRepository->find($productoCarritoDTO->getIdProducto()));
-//
-//            $this->em->persist($lineaPedido);
-//            $total += $productoCarritoDTO->getTotal();
-//
-//        }
-//
-//
-//        $this->em->flush();
-//
-//
-//        return new JsonResponse(['message' => 'Pedido realizado correctamente'], JsonResponse::HTTP_CREATED);
-//    }
-//
-
+    /**
+     * Crear un nuevo pedido que manda un correo al usuario y en ese correo se adjunta un pdf con el detalle del pedido
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/pedido/nuevo', name: 'nuevo_pedido', methods: ['POST'])]
     public function nuevoPedido(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -342,6 +323,16 @@ class PedidoController extends AbstractController
 
         return new JsonResponse(['success' => true, 'message' => 'Pedidos registrados con éxito']);
     }
+
+    /**
+     * Crear un pedido con sus líneas de pedido asociadas
+     * @param EntityManagerInterface $em
+     * @param Perfil $perfil
+     * @param array $productos
+     * @param bool $estado
+     * @return void
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
 
     private function crearPedido(EntityManagerInterface $em, Perfil $perfil, array $productos, bool $estado): void
     {
@@ -404,6 +395,14 @@ class PedidoController extends AbstractController
         unlink($pdfPath);
 
     }
+
+    /**
+     * Generar un PDF con el detalle del pedido
+     * @param Pedido $pedido
+     * @param string $productosComprados
+     * @param float $total
+     * @return string
+     */
 
     private function generarPdfPedido(Pedido $pedido, string $productosComprados, float $total): string
 {
@@ -501,7 +500,6 @@ class PedidoController extends AbstractController
                 'fecha' => $pedido->getFecha()->format('Y-m-d H:i:s'),
                 'estado' => $pedido->getEstado(),
                 'pagoTotal' => $pedido->getPagoTotal(),
-                //forma guay del david para llegar a fk
                 'username'=>$pedido->getPerfil()->getUsuario()->getUsername()
             ];
         }
@@ -514,6 +512,12 @@ class PedidoController extends AbstractController
         return $this->json($response);
     }
 
+    /**
+     * Metodo que descarga el PDF de la compra desde el perfil del usuario para cada pedido.
+     * @param int $id
+     * @param EntityManagerInterface $em
+     * @return Response
+     */
     #[Route('/{id}/descargar-pdf', name: 'pedido_pdf')]
     public function descargarPdf(int $id, EntityManagerInterface $em): Response
     {
@@ -523,25 +527,20 @@ class PedidoController extends AbstractController
             return new Response('Pedido no encontrado', 404);
         }
 
-        // Simulamos la generación de productos comprados para el ejemplo
         $productosComprados = '';
         $total = $pedido->getPagoTotal();
 
         foreach ($pedido->getLineaPedidos() as $linea) {
-            // Obtenemos el producto relacionado con la línea de pedido
-            $producto = $linea->getProducto();  // Obtenemos el producto
+            $producto = $linea->getProducto();
 
-            // Repetimos el código del producto tantas veces como la cantidad de esa línea
             $codigoProductoRepetido = str_repeat($producto->getCodigoJuego() . ' ', $linea->getCantidad());
 
-            // Añadimos el detalle del producto y su código repetido
             $productosComprados .= '- ' . $producto->getNombre()
-                . ' | Códigos: ' . $codigoProductoRepetido  // Repetimos el código
+                . ' | Códigos: ' . $codigoProductoRepetido
                 . ' | Precio: ' . $linea->getPrecio() . '€'
-                . ' x ' . $linea->getCantidad() . "\n";  // Información del producto
+                . ' x ' . $linea->getCantidad() . "\n";
         }
 
-        // Generamos el PDF
         $options = new Options();
         $options->set('defaultFont', 'Arial');
         $dompdf = new Dompdf($options);
@@ -613,21 +612,25 @@ class PedidoController extends AbstractController
     }
 
 
-
+    /**
+     * Cambiar el estado de un pedido y enviar un correo al usuario cuando este esté listo para ser enviado
+     * @param int $id
+     * @param EntityManagerInterface $em
+     * @param LineaPedidoRepository $lineaPedidoRepository
+     * @return JsonResponse
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
     #[Route('/cambiarEstado/{id}', name: 'cambiar_estado_pedido', methods: ['PUT'])]
     public function cambiarEstado(int $id, EntityManagerInterface $em, LineaPedidoRepository $lineaPedidoRepository): JsonResponse
     {
-        // Verificar si el usuario tiene el rol ROLE_ADMIN
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
-        // Buscar el pedido por su ID
         $pedido = $this->pedidoRepository->find($id);
 
         if (!$pedido) {
             return $this->json(['message' => 'Pedido no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        // Cambiar el estado del pedido a true
         $pedido->setEstado(true);
         $em->flush();
 

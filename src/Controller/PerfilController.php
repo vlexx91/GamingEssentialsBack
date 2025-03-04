@@ -25,6 +25,10 @@ class PerfilController extends AbstractController
         $this->perfilRepository = $perfilRepository;
     }
 
+    /**
+     * Find all Perfiles
+     * @return Response
+     */
     #[Route('', name: 'app_perfil' , methods: ['GET'])]
     public function index(): Response
     {
@@ -33,6 +37,13 @@ class PerfilController extends AbstractController
         return $this->json($perfil);
     }
 
+    /**
+     * Crear un perfil y un usuario
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     * @throws \DateMalformedStringException
+     */
     #[Route('/crear', name: 'perfil_crear', methods: ['POST'])]
     public function crearDto(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -64,6 +75,16 @@ class PerfilController extends AbstractController
         return $this->json(['message' => 'Usuario y Perfil creados correctamente'], Response::HTTP_CREATED);
     }
 
+    /**
+     * editar un perfil y un usuario por el id
+     * @param int $id
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param PerfilRepository $perfilRepository
+     * @param UserPasswordHasherInterface $passwordHasher
+     * @return JsonResponse
+     * @throws \DateMalformedStringException
+     */
 
     #[Route('/editar/{id}', name: 'perfil_editar', methods: ['PUT'])]
     public function edit(int $id, Request $request, EntityManagerInterface $em, PerfilRepository $perfilRepository, UserPasswordHasherInterface $passwordHasher): JsonResponse
@@ -103,8 +124,16 @@ class PerfilController extends AbstractController
         return $this->json(['message' => 'Perfil y Usuario actualizados correctamente'], Response::HTTP_OK);
     }
 
-    //Editar a través del token
 
+    /**
+     * Metodo para editar el perfil del usuario a traves de un token JWT.
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $em
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
+     */
     #[Route('/editarportoken', name: 'perfil_editar_token', methods: ['PUT'])]
     public function editByToken(
         Request $request,
@@ -144,7 +173,6 @@ class PerfilController extends AbstractController
 
         $datos = json_decode($request->getContent(), true);
 
-        // Validar que los datos requeridos existen antes de asignarlos
         if (!empty($datos['nombre'])) {
             $perfil->setNombre($datos['nombre']);
         }
@@ -161,18 +189,20 @@ class PerfilController extends AbstractController
             $perfil->setDni($datos['dni']);
         }
         if (!empty($datos['imagenUrl'])) {
-            $perfil->setImagen($datos['imagenUrl']); // Nuevo campo para la imagen
+            $perfil->setImagen($datos['imagenUrl']);
         }
 
-        // Guardamos los cambios en la base de datos
         $em->flush();
 
         return $this->json(['message' => 'Perfil actualizado correctamente'], Response::HTTP_OK);
     }
 
 
-
-
+    /**
+     * Buscar un perfil por el id
+     * @param int $id
+     * @return JsonResponse
+     */
     #[Route('/{id}', name: 'perfil_buscar', methods: ['GET'])]
     public function buscarPorId(int $id): JsonResponse
     {

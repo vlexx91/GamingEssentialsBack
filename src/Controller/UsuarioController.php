@@ -41,6 +41,16 @@ class UsuarioController extends AbstractController
     }
 
 
+    /**
+     * Registro de perfil y usuario con la validacion de la edad, dni, telefono y correo. Se envia un correo de verificacion al resgitrarse
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $userPasswordHasher
+     * @return JsonResponse
+     * @throws \DateMalformedStringException
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     *
+     */
     #[Route('/registro', name: 'app_usuario1', methods: ["POST"])]
     public function registro(Request $request, EntityManagerInterface $em,
                              UserPasswordHasherInterface $userPasswordHasher): JsonResponse
@@ -120,6 +130,12 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Usuario creado y correo enviado'], Response::HTTP_CREATED);
     }
 
+    /**
+     * Verificar el codigo de verificacion tras el registro de un usuario
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/verificar', name: 'verificar_usuario', methods: ["POST"])]
     public function verificarCodigo(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -137,9 +153,12 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Usuario verificado exitosamente'], Response::HTTP_OK);
     }
 
-
-
-
+    /**
+     * Find all de los usuarios
+     * @param Request $request
+     * @param UserPasswordHasherInterface $passwordHasher
+     * @return JsonResponse
+     */
 
     #[Route('', name: 'app_usuario' , methods: ['GET'])]
     public function index(): Response
@@ -149,7 +168,15 @@ class UsuarioController extends AbstractController
         return $this->json($usuarios);
     }
 
+    /**
+     * Crear un usuario
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $userPasswordHasher
+     * @return JsonResponse
+     */
     #[Route('/crear', name: 'usuario_crear', methods: ['GET','POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function crear(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
@@ -166,6 +193,14 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Clase creada'], Response::HTTP_CREATED);
     }
 
+    /**
+     * Editar un usuario por el id
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param Usuario $usuario
+     * @param UserPasswordHasherInterface $userPasswordHasher
+     * @return JsonResponse
+     */
     #[Route('/editar/{id}', name: 'usuario_editar', methods: ['PUT'])]
     public function editar(Request $request, EntityManagerInterface $em,
                            Usuario $usuario, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
@@ -184,14 +219,18 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Clase editada'], Response::HTTP_OK);
     }
 
-    //No se puede liminar si no se elimina el perfil
 
+    /**
+     * Eliminar un usuario por el id
+     * @param Usuario $usuario
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     */
     #[Route('/eliminar/{id}', name: 'usuario_eliminar', methods: ['DELETE'])]
     public function eliminar(Usuario $usuario, EntityManagerInterface $em): JsonResponse
     {
 
 
-        // Remove the user
         $em->remove($usuario);
         $em->flush();
 
@@ -199,10 +238,10 @@ class UsuarioController extends AbstractController
         return $this->json(['message' => 'Clase eliminada'], Response::HTTP_OK);
     }
 
-
     /**
-     * Mostrar Usuarios y perfiles con DTOs
-     *
+     * Mostrar la DTO de usuario y perfil
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
      */
 
     #[Route('/mostrarDTO', name: 'usuario_mostrar', methods: ['GET'])]
@@ -248,13 +287,12 @@ class UsuarioController extends AbstractController
 
         $crearUsuarioPerfil = new CrearUsuarioPerfilDTO();
 
-        // Create new Usuario
         $usuario = new Usuario();
         $usuario->setUsername($datos['username']);
         $usuario->setPassword($userPasswordHasher->hashPassword($usuario, $datos['password']));
         $usuario->setCorreo($datos['email']);
         $usuario->setRol('ROLE_CLIENTE');
-        // Create new Perfil and associate with Usuario
+
         $perfil = new Perfil();
         $perfil->setNombre($datos['nombre']);
         $perfil->setApellido($datos['apellidos']);
@@ -266,7 +304,6 @@ class UsuarioController extends AbstractController
         $perfil->setUsuario($usuario);
 
 
-        // Persist both entities
         $em->persist($usuario);
         $em->persist($perfil);
         $em->flush();
@@ -280,6 +317,13 @@ class UsuarioController extends AbstractController
      * ADMINISTRADOR
      */
 
+    /**
+     * Crear un admin
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $userPasswordHasher
+     * @return JsonResponse
+     */
 
     #[Route('/crearAdmin', name: 'usuario_crear_admin', methods: ['POST'])]
     public function crearAdmin(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
@@ -302,6 +346,14 @@ class UsuarioController extends AbstractController
     }
 
 
+    /**
+     * Metodo que a traves del token, obtiene el id del usuario
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
     #[Route('/idToken', name: 'id_token', methods: ['GET'])]
     public function obtenerIdDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
         $token = $request->headers->get('authorization');
@@ -326,11 +378,16 @@ class UsuarioController extends AbstractController
         return new JsonResponse(['user_id' => $user->getId()]);
     }
 
-    /**
-     * Mostrar Usuario y perfil con DTO
-     *
-     */
 
+    /**
+     * Metodo para obtener el perfil del usuario autenticado.
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
+     */
     #[Route('/mostrarPerfil', name: 'usuario_mostrar_uno', methods: ['GET'])]
     public function mostrarPerfil(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager, PerfilRepository $perfilRepository): JsonResponse{
         $token = $request->headers->get('authorization');
@@ -373,7 +430,13 @@ class UsuarioController extends AbstractController
         return $this->json($perfilCrearDTO, Response::HTTP_OK);
     }
 
-
+    /**
+     * Muestra el rol del usuario a partir del token del usuario
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
     #[Route('/RolToken', name: 'rol_token', methods: ['GET'])]
     public function obtenerRolDesdeToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
         $token = $request->headers->get('authorization');
@@ -397,9 +460,13 @@ class UsuarioController extends AbstractController
 
         return new JsonResponse(['user_rol' => $user->getRol()]);
     }
+
     /**
-     * Crear Gestor teniendo el rol de administrador
-     *
+     * Crea un gestor siendo administrador
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $userPasswordHasher
+     * @return JsonResponse
      */
 
     #[Route('/gestor/crear', name: 'usuario_crear_gestor', methods: ['POST'])]
@@ -425,8 +492,7 @@ class UsuarioController extends AbstractController
 
 
     /**
-     * Editar los datos de un gestor.
-     *
+     * editar un gestor siendo administrador
      * @param int $id
      * @param Request $request
      * @param EntityManagerInterface $em
@@ -434,6 +500,7 @@ class UsuarioController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/editarGestor/{id}', name: 'usuario_editar_gestor', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function editarGestor(int $id, Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
@@ -458,8 +525,7 @@ class UsuarioController extends AbstractController
     }
 
     /**
-     * Muestra todos los gestores.
-     *
+     * Muestre los gestores que existen sin bucle infinito
      * @return JsonResponse
      */
     #[Route('/gestores', name: 'usuario_listar_gestores', methods: ['GET'])]
@@ -474,14 +540,15 @@ class UsuarioController extends AbstractController
         ]);
     }
 
+
     /**
-     * Elimina un gestor.
-     *
+     * Eliminar un gestor siendo administrador
      * @param int $id
      * @param EntityManagerInterface $em
      * @return JsonResponse
      */
     #[Route('/eliminarGestor/{id}', name: 'usuario_eliminar_gestor', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function eliminarGestor(int $id, EntityManagerInterface $em): JsonResponse
     {
         $usuario = $this->usuarioRepository->find($id);
@@ -501,6 +568,11 @@ class UsuarioController extends AbstractController
     }
 
 
+    /**
+     * Listar todos los perfiles siendo gestor
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
+     */
 
     #[Route('/gestor/perfiles', name: 'listar_perfiles', methods: ['GET'])]
     public function listarPerfiles(PerfilRepository $perfilRepository): JsonResponse
@@ -527,6 +599,12 @@ class UsuarioController extends AbstractController
         return $this->json($result, Response::HTTP_OK);
     }
 
+    /**
+     * Listar un perfil por id siendo gestor
+     * @param int $id
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
+     */
     #[Route('/gestor/perfiles/{id}', name: 'listar_perfil_por_id', methods: ['GET'])]
     public function listarPerfilPorId(int $id, PerfilRepository $perfilRepository): JsonResponse
     {
@@ -552,6 +630,12 @@ class UsuarioController extends AbstractController
         return $this->json($result, Response::HTTP_OK);
     }
 
+    /**
+     * Listar todos los perfiles con sus pedidos y lineas de pedido siendo gestor
+     * @param PerfilRepository $perfilRepository
+     * @param PedidoRepository $pedidoRepository
+     * @return JsonResponse
+     */
     #[Route('/gestor/perfiles/lineaPedido', name: 'listar_perfiles_con_lineas', methods: ['GET'])]
     public function listarPerfilesConLineas(PerfilRepository $perfilRepository, PedidoRepository $pedidoRepository): JsonResponse
     {
@@ -604,6 +688,13 @@ class UsuarioController extends AbstractController
         return $this->json($result, Response::HTTP_OK);
     }
 
+    /**
+     * Listar todos los perfiles con sus pedidos y lineas de pedido por id de usuario siendo gestor
+     * @param int $userId
+     * @param PerfilRepository $perfilRepository
+     * @param PedidoRepository $pedidoRepository
+     * @return JsonResponse
+     */
     #[Route('/gestor/perfiles/lineaPedido/{userId}', name: 'listar_perfiles_con_lineas_por_usuario', methods: ['GET'])]
     public function listarPerfilesConLineasPorUsuario(int $userId, PerfilRepository $perfilRepository, PedidoRepository $pedidoRepository): JsonResponse
     {
@@ -655,6 +746,13 @@ class UsuarioController extends AbstractController
 
         return $this->json($result, Response::HTTP_OK);
     }
+
+    /**
+     * Obtener el usuario por el id del perfil
+     * @param int $id
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
+     */
     #[Route('/perfil/{id}/usuario', name: 'obtener_usuario_por_perfil', methods: ['GET'])]
     public function obtenerUsuarioPorPerfil(int $id, PerfilRepository $perfilRepository): JsonResponse
     {
@@ -698,6 +796,15 @@ class UsuarioController extends AbstractController
         return $this->json($resultado, Response::HTTP_OK);
     }
 
+
+    /**
+     * Metodo para verificar si la contraseña proporcionada por el usuario autenticado es válida(para el perfil del usuario).
+     *
+     * @param Request $request
+     * @param UserPasswordHasherInterface $passwordHasher
+     * @param Security $security
+     * @return JsonResponse
+     */
     #[Route('/verificar-password', name: 'verificar_password', methods: ['POST'])]
     public function verificarPassword(Request $request, UserPasswordHasherInterface $passwordHasher, Security $security): JsonResponse {
         $datos = json_decode($request->getContent(), true);
@@ -710,6 +817,15 @@ class UsuarioController extends AbstractController
         return $this->json(['valid' => true], Response::HTTP_OK);
     }
 
+    /**
+     * Metodo para cambiar la contraseña del usuario autenticado(para el perfil del usuario).
+     *
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $passwordHasher
+     * @param Security $security
+     * @return JsonResponse
+     */
     #[Route('/cambiar-password', name: 'cambiar_password', methods: ['POST'])]
     public function cambiarPassword(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, Security $security): JsonResponse {
         $datos = json_decode($request->getContent(), true);
@@ -766,6 +882,14 @@ class UsuarioController extends AbstractController
         ], Response::HTTP_OK);
     }
 
+    /**
+     * Recuperar contraseña desde un correo
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @return JsonResponse
+     * @throws \Random\RandomException
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
+     */
 
     #[Route('/recuperar-password', name: 'recuperar_password', methods: ['POST'])]
     public function recuperarPassword(Request $request,EntityManagerInterface $em): JsonResponse
@@ -781,7 +905,7 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'Correo no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
-        $codigo = random_int(100000, 999999); // Generate a 6-digit code
+        $codigo = random_int(100000, 999999);
         $usuario->setCodigoVerificacion($codigo);
         $em->flush();
 
@@ -797,6 +921,13 @@ class UsuarioController extends AbstractController
     }
 
 
+    /**
+     * Resetear la contraseña con el código de verificación
+     * @param Request $request
+     * @param EntityManagerInterface $em
+     * @param UserPasswordHasherInterface $passwordHasher
+     * @return JsonResponse
+     */
     #[Route('/reset-password', name: 'reset_password', methods: ['POST'])]
     public function resetPassword(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
@@ -814,13 +945,21 @@ class UsuarioController extends AbstractController
         }
 
         $usuario->setPassword($passwordHasher->hashPassword($usuario, $newPassword));
-        $usuario->setCodigoVerificacion(null); // Clear the code after resetting the password
+        $usuario->setCodigoVerificacion(null);
         $em->flush();
 
         return $this->json(['message' => 'Contraseña restablecida con éxito'], Response::HTTP_OK);
     }
 
 
+    /**
+     * Obtener la imagen de perfil del usuario
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param UsuarioRepository $usuarioRepository
+     * @param PerfilRepository $perfilRepository
+     * @return JsonResponse
+     */
     #[Route('/perfil/imagen', name: 'obtener_imagen_perfil', methods: ['GET'])]
     public function obtenerImagenPerfil(Request $request, JWTTokenManagerInterface $jwtManager, UsuarioRepository $usuarioRepository, PerfilRepository $perfilRepository): JsonResponse
     {

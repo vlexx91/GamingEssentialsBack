@@ -29,6 +29,11 @@ class ValoracionesController extends AbstractController
          $this->valoracionesRepository = $valoracionesRepository;
         $this->serializer = $serializer;
     }
+
+    /**
+     * find all de valoraciones
+     * @return Response
+     */
     #[Route('/find', name: 'app_valoraciones' , methods: ['GET'])]
     public function index(): Response
     {
@@ -219,7 +224,6 @@ class ValoracionesController extends AbstractController
                 $totalEstrellas = array_sum(array_map(fn($v) => $v->getEstrellas(), $valoraciones));
                 $promedio = $totalEstrellas / count($valoraciones);
 
-                // Agregamos el producto completo en lugar de solo el ID
                 $promedios[] = [
                     'producto' => [
                         'id' => $producto->getId(),
@@ -237,12 +241,10 @@ class ValoracionesController extends AbstractController
             }
         }
 
-        // Ordenar por promedio de valoraciones
         usort($promedios, fn($a, $b) => $b['promedio'] <=> $a['promedio']);
 
         $topProductos = array_slice($promedios, 0, 10);
 
-        // Solo devolver la parte de 'producto'
         $topProductosLimpios = array_map(fn($p) => $p['producto'], $topProductos);
 
         return $this->json(['top_5_productos' => $topProductosLimpios], Response::HTTP_OK);
@@ -300,6 +302,15 @@ class ValoracionesController extends AbstractController
         return $this->json($data, Response::HTTP_OK);
     }
 
+    /**
+     * Metodo que lista las valoraciones activadas por un usuario autentificado
+     *
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @param ValoracionesRepository $valoracionesRepository
+     * @return JsonResponse
+     */
     #[Route('/mis-valoraciones', name: 'app_valoraciones_by_token', methods: ['GET'])]
     public function getValoracionesByToken(
         Request $request,
@@ -333,7 +344,7 @@ class ValoracionesController extends AbstractController
 
         $valoraciones = $valoracionesRepository->findBy(
             ['usuario' => $user],
-            ['id' => 'DESC'] // Ordenar de la más reciente a la más antigua
+            ['id' => 'DESC']
         );
 
         if (empty($valoraciones)) {
@@ -365,6 +376,14 @@ class ValoracionesController extends AbstractController
         return $this->json($data);
     }
 
+    /**
+     * Metodo que desactiva la valoracion especifica hecha por un usuario
+     *
+     * @param int $id
+     * @param EntityManagerInterface $entityManager
+     * @param ValoracionesRepository $valoracionesRepository
+     * @return JsonResponse
+     */
     #[Route('/{id}/desactivar', name: 'app_desactivar_valoracion', methods: ['PATCH'])]
     public function desactivarValoracion(
         int $id,
@@ -377,7 +396,6 @@ class ValoracionesController extends AbstractController
             return new JsonResponse(['message' => 'Valoración no encontrada'], Response::HTTP_NOT_FOUND);
         }
 
-        // Cambiar el estado de la valoración a desactivado
         $valoracion->setActivado(false);
         $entityManager->flush();
 
