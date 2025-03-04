@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\ListaDeseos;
@@ -139,9 +140,16 @@ class ListaDeseosController extends AbstractController
      * @param JWTTokenManagerInterface $jwtManager
      * @return JsonResponse
      */
+
     #[Route('/listar', name: 'listar_lista_deseos', methods: ['GET'])]
-    public function listar(Request $request, EntityManagerInterface $em, JWTTokenManagerInterface $jwtManager): JsonResponse
+    public function listar(Request $request, EntityManagerInterface $em, JWTTokenManagerInterface $jwtManager, Security $security): JsonResponse
     {
+        $usuario = $security->getUser();
+
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
+        }
+
         $token = $request->headers->get('Authorization');
         if (!$token) {
             return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
