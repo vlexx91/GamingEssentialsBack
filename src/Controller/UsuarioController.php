@@ -922,6 +922,10 @@ class UsuarioController extends AbstractController
             return $this->json(['message' => 'Correo no encontrado'], Response::HTTP_NOT_FOUND);
         }
 
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
+        }
+
         $codigo = random_int(100000, 999999);
         $usuario->setCodigoVerificacion($codigo);
         $em->flush();
@@ -953,6 +957,10 @@ class UsuarioController extends AbstractController
 
         if (!$usuario) {
             return $this->json(['message' => 'Código inválido'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
         }
 
         $newPassword = $datos['newPassword'];
