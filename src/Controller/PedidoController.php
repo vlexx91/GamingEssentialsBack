@@ -194,6 +194,10 @@ class PedidoController extends AbstractController
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
+        if (!$user->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
+        }
+
         $perfil = $perfilRepository->findOneBy(['usuario' => $user->getId()]);
 
         if (!$perfil) {
@@ -290,6 +294,10 @@ class PedidoController extends AbstractController
         $usuario = $em->getRepository(Usuario::class)->findOneBy(['username' => $username]);
         if (!$usuario) {
             return new JsonResponse(['success' => false, 'message' => 'Usuario no encontrado'], 404);
+        }
+
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
         }
 
         $perfil = $em->getRepository(Perfil::class)->findOneBy(['usuario' => $usuario]);
