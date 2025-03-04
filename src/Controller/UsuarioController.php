@@ -387,6 +387,37 @@ class UsuarioController extends AbstractController
         return new JsonResponse(['user_id' => $user->getId()]);
     }
 
+    /**
+     * Obtener el estado activo del usuario a partir del token.
+     * @param Request $request
+     * @param JWTTokenManagerInterface $jwtManager
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
+    #[Route('/activo', name: 'obtener_activo_por_token', methods: ['GET'])]
+    public function obtenerActivoPorToken(Request $request, JWTTokenManagerInterface $jwtManager, EntityManagerInterface $entityManager): JsonResponse {
+        $token = $request->headers->get('authorization');
+        if (!$token) {
+            return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $formatToken = str_replace('Bearer ', '', $token);
+        $finalToken = $jwtManager->parse($formatToken);
+
+        $username = $finalToken['username'] ?? null;
+        if (!$username) {
+            return new JsonResponse(['message' => 'Invalid token'], Response::HTTP_FORBIDDEN);
+        }
+
+        $user = $entityManager->getRepository(Usuario::class)->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return new JsonResponse(['activo' => $user->getActivo()], Response::HTTP_OK);
+    }
+
 
     /**
      * Metodo para obtener el perfil del usuario autenticado.
