@@ -11,6 +11,7 @@ use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -71,9 +72,14 @@ class ValoracionesController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/crear', name: 'valoraciones_crear', methods: ['POST'])]
-    public function crearValoracion(Request $request, EntityManagerInterface $em): JsonResponse
+    public function crearValoracion(Request $request, EntityManagerInterface $em, Security $security): JsonResponse
     {
         $datos = json_decode($request->getContent(), true);
+        $usuario = $security->getUser();
+
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
+        }
 
         if ($datos['estrellas'] < 1 || $datos['estrellas'] > 5) {
             return $this->json(['message' => 'La valoración debe estar entre 1 y 5 estrellas'], Response::HTTP_BAD_REQUEST);
