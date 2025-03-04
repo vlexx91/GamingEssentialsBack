@@ -40,6 +40,10 @@ class UsuarioController extends AbstractController
         $this->usuarioRepository = $usuarioRepository;
     }
 
+    private function checkUserIsActive(Usuario $usuario): bool
+    {
+        return $usuario->getActivo();
+    }
 
     /**
      * Registro de perfil y usuario con la validacion de la edad, dni, telefono y correo. Se envia un correo de verificacion al resgitrarse
@@ -207,6 +211,11 @@ class UsuarioController extends AbstractController
     {
 
         $datos = json_decode($request->getContent(), true);
+//        $usuario = $em->getRepository(Usuario::class)->findOneBy(['username' => $datos['username']]);
+//
+//        if ($usuario && !$this->checkUserIsActive($usuario)) {
+//            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
+//        }
 
 
         $usuario->setUsername($datos['username']);
@@ -394,6 +403,7 @@ class UsuarioController extends AbstractController
         if (!$token) {
             return new JsonResponse(['message' => 'No token provided'], Response::HTTP_UNAUTHORIZED);
         }
+
 
         $formatToken = str_replace('Bearer ', '', $token);
         $finalToken = $jwtManager->parse($formatToken);
@@ -810,6 +820,9 @@ class UsuarioController extends AbstractController
         $datos = json_decode($request->getContent(), true);
         $usuario = $security->getUser();
 
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
+        }
         if (!$usuario || !$passwordHasher->isPasswordValid($usuario, $datos['password'])) {
             return $this->json(['valid' => false], Response::HTTP_UNAUTHORIZED);
         }
@@ -833,6 +846,10 @@ class UsuarioController extends AbstractController
 
         if (!$usuario) {
             return $this->json(['message' => 'Usuario no autenticado'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
         }
 
         if (strlen($datos['nuevaPassword']) < 8) {
