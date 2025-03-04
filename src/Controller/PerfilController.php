@@ -38,6 +38,7 @@ class PerfilController extends AbstractController
     }
 
     /**
+     * NO SE UTILIZA
      * Crear un perfil y un usuario
      * @param Request $request
      * @param EntityManagerInterface $em
@@ -110,6 +111,10 @@ class PerfilController extends AbstractController
             return $this->json(['message' => 'El perfil no tiene un usuario asociado'], Response::HTTP_BAD_REQUEST);
         }
 
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
+        }
+
         $usuario->setUsername($datos['username']);
         $usuario->setCorreo($datos['email']);
         $usuario->setRol('ROLE_CLIENTE');
@@ -163,6 +168,10 @@ class PerfilController extends AbstractController
 
         if (!$usuario) {
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$usuario->getActivo()) {
+            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
         }
 
         $perfil = $perfilRepository->findOneBy(['usuario' => $usuario]);
