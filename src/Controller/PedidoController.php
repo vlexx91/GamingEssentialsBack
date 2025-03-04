@@ -194,9 +194,7 @@ class PedidoController extends AbstractController
             return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        if (!$user->getActivo()) {
-            return $this->json(['message' => 'Usuario inactivo'], Response::HTTP_FORBIDDEN);
-        }
+
 
         $perfil = $perfilRepository->findOneBy(['usuario' => $user->getId()]);
 
