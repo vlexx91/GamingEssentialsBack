@@ -1047,4 +1047,21 @@ class UsuarioController extends AbstractController
         return $this->json(['imagen' => $perfil->getImagen()], Response::HTTP_OK);
     }
 
+    #[Route('/datos', name: 'obtener_usuario', methods: ['GET'])]
+    public function obtenerUsuario(Security $security): JsonResponse {
+        $usuario = $security->getUser();
+
+        if (!$usuario) {
+            return $this->json(['message' => 'Usuario no encontrado'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json([
+            'id' => $usuario->getId(),
+            'username' => $usuario->getUsername(),
+            'rol' => $usuario->getRol(),
+            'activo' => $usuario->getActivo()
+        ]);
+    }
+
+
 }
