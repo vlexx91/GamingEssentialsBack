@@ -18,13 +18,13 @@ El presente proyecto consiste en el desarrollo de una plataforma web de venta de
 
 PHP 8.2
 
-TypeScript
+TypeScript 5.7.3
 
 ### Frameworks y Librerías
 
 Symfony (Backend)
 
-Angular CLI 19.9 (Frontend)
+Angular CLI  19.1.4 (Frontend)
 
 Tailwind CSS (Estilos)
 
@@ -38,7 +38,7 @@ SweetAlert (Alertas interactivas)
 
 ### Otras Dependencias
 
-Node.js 19.9
+Node.js 22.12.0
 
 
 ## 📂 Instalación y Configuración
